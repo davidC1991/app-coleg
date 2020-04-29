@@ -10,9 +10,11 @@ import 'package:app_red_social/widgets/header.dart';
 import 'package:app_red_social/models/user.dart';
 
 class ProfilePage extends StatefulWidget {
-  final String profileId;
+  String profileId ;
+  bool docenteb ;
 
-  ProfilePage({this.profileId});
+  ProfilePage ({ this .profileId, this.docenteb});
+ 
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
@@ -73,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage> {
         isLoading=true;
       });
       QuerySnapshot snapshot = await postsRef
-        .document(widget.profileId)
+        .document('105951231609486716903')
         .collection('userPosts')
         .orderBy('timestamp', descending: true)
         .getDocuments();
@@ -111,7 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
       editProfile(){
         Navigator.push(context, MaterialPageRoute(builder: 
-        (context)=> EditProfile(currentUserId: currentUserId)));
+        (context)=> EditProfile(currentUserId : currentUserId, docenteb: widget.docenteb)));
       }
     
       Container buildButton({String text, Function function}){
@@ -231,7 +233,7 @@ class _ProfilePageState extends State<ProfilePage> {
     
       buildProfileHeaders(){
         return FutureBuilder(
-          future: usersRef.document(widget.profileId).get(),
+          future: widget.docenteb?docenteRef.document(widget.profileId).get():usersRef.document(widget.profileId).get(),
           builder: (context, snapshot){
              if(!snapshot.hasData){
                return circularProgress(context);
@@ -312,7 +314,7 @@ class _ProfilePageState extends State<ProfilePage> {
         if(isLoading){
           return circularProgress(context);
         }else if(postOrientation=='grid'){
-                    List<GridTile> gridTiles= [];
+                 List<GridTile> gridTiles= [];
                  posts.forEach((post){
                    gridTiles.add(GridTile(child: PostTile(post)));
                  });
@@ -371,6 +373,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Divider(
                 height: 0.0,
               ),
+              Text('Matematicas'),
               buildProfilePosts(),
             ],
           ),

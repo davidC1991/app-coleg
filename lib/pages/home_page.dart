@@ -4,17 +4,19 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:app_red_social/pages/profile_page.dart';
+
 import 'package:app_red_social/pages/create_account.dart';
 import 'package:app_red_social/pages/search_page.dart';
 import 'package:app_red_social/pages/timeLine_Page.dart';
 import 'package:app_red_social/pages/upLoad_page.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_red_social/models/user.dart';
 import 'Notifications_page.dart';
 
 final GoogleSignIn googleSignIn = GoogleSignIn();
 final StorageReference storageRef = FirebaseStorage.instance.ref();
 final usersRef=Firestore.instance.collection('users');
+final docenteRef=Firestore.instance.collection('docente');
 final postsRef=Firestore.instance.collection('posts');
 final followersRef=Firestore.instance.collection('followers');
 final followingRef=Firestore.instance.collection('following');
@@ -25,7 +27,9 @@ final activityFeedRef = Firestore.instance.collection('feed');
 
 final DateTime timestamp= DateTime.now();
 User currentUser;
-
+String username;
+int cont_auth=0;
+bool docente=false;
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -40,36 +44,53 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() { 
     super.initState();
-
+    
     pageController = PageController(
       //initialPage: 2
     );
+    googleSignIn.isSignedIn().then((onValue){
+      print('onvalue=$onValue');
+      if (onValue==true){
+        cont_auth++;
+        }else{
+          cont_auth=0;
+        }
+    });
+    print(cont_auth);
+    print('------------>>>username:$username');
     // autentica o escucha cuando un usuario hace login
+    
     googleSignIn.onCurrentUserChanged.listen((account){
       controladorSignIn(account);
-      
-    },
-      onError: (err){
-        print('Error al ingresar: $err');
+      //print('entro en  1 no autth');
+     },onError: (err){
+       // print('Error al ingresar: $err');
       });
+      
       // reautenticar cuando la app es abierta otra vez, despues de haber iniciado sesion
       googleSignIn.signInSilently(suppressErrors: false).then((account){
         controladorSignIn(account);
-      }).catchError((err){
+        print('entro en  2 si autth');
+        }).catchError((err){
         print('Error al ingresar: $err');
       });
 
   }
- @override
-  void dispose(){
-    pageController.dispose();
-    super.dispose();
-  }
-
   controladorSignIn(GoogleSignInAccount account)async{
-      if(account != null){
-       // print('usuario ingresó con la cuentas: $account');
-      await createUserInFirestore();
+       if(account != null){
+      print('usuario ingresó con la cuentas: ${account.email}');
+      if (account.email == 'callejas.david29@gmail.com'){
+        print('Usted es un profesor ---------');
+        docente=true;
+        await createUser_admin();
+      }else {
+        docente=false;
+      print('===============||===============');
+      print('cont_aut:$cont_auth');
+      
+      createUserInFirestore();
+      
+      }
       setState(() {
           isAuth= true;
         });
@@ -80,15 +101,26 @@ class _HomePageState extends State<HomePage> {
       }
   }
 
-     createUserInFirestore() async{
+    createUserInFirestore() async{
        //chequear que el la coleccion de usuario existe en db
+       
        final GoogleSignInAccount user = googleSignIn.currentUser;
        DocumentSnapshot doc = await usersRef.document(user.id).get();
-       
+       //print('doc: ${user.}');
        if(!doc.exists){
        //si el usuario no exite crear un a cuenta
-        final username = await Navigator.push(context, MaterialPageRoute(
+      print('cont_aut:$cont_auth');
+      print('==========================');
+      if (cont_auth<2){
+        cont_auth=2;
+        print(':::::::::::::::::::');
+          username = await Navigator.push(context, MaterialPageRoute(
           builder: (context)=> CreateAccount()));
+     //     print('ya ingreso el dato---------------------->');
+      } 
+
+        
+          print('username:-------------->! $username');
        //conseguir el username para crear un nuevo docuemento de usuario en db
         usersRef.document(user.id).setData({
           'id': user.id,
@@ -97,15 +129,16 @@ class _HomePageState extends State<HomePage> {
           'email': user.email,
           'displayName': user.displayName,
           'bio': '',
-          'timestamp': timestamp
+          'timestamp': timestamp,
+          'docente': false
 
         });
        //make new user their own follower (to include their posts in their timeline)
-        await followersRef  
+         await followersRef  
           .document(user.id)
           .collection('userFollowers')
           .document(user.id).
-          setData({});
+          setData({}); 
         //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
         //las otras paginas
 
@@ -115,10 +148,61 @@ class _HomePageState extends State<HomePage> {
        currentUser = User.fromDocument(doc);
        print(currentUser);
        print(currentUser.username);
+        print('docente: ${currentUser.docente}');
      }
 
 
+    createUser_admin() async {
+          //chequear que el la coleccion de usuario existe en db
+       final GoogleSignInAccount user = googleSignIn.currentUser;
+       DocumentSnapshot doc = await docenteRef.document(user.id).get();
+       //print('doc: ${account}');
+       if(!doc.exists){
+       //si el usuario no exite crear un a cuenta
+      if (cont_auth<2){
+        cont_auth=2;
+         username = await Navigator.push(context, MaterialPageRoute(
+          builder: (context)=> CreateAccount()));
+          print('username:--------------! $username');
+      }
+       //conseguir el username para crear un nuevo docuemento de usuario en db
+        docenteRef.document(user.id).setData({
+          'id': user.id,
+          'username': username,
+          'photoUrl': user.photoUrl,
+          'email': user.email,
+          'displayName': user.displayName,
+          'bio': '',
+          'timestamp': timestamp,
+          'docente': true
+
+        });
+       //make new user their own follower (to include their posts in their timeline)
+       // await followersRef  
+       //   .document(user.id)
+       //   .collection('userFollowers')
+       //   .document(user.id).
+       //   setData({});
+        //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
+        //las otras paginas
+
+        doc = await docenteRef.document(user.id).get();
+       }
+       
+       currentUser = User.fromDocument(doc);
+       print(currentUser);
+       print(currentUser.username);
+       print('docente: ${currentUser.docente}');
+     }
+
+ @override
+  void dispose(){
+    pageController.dispose();
+    super.dispose();
+  }
+
   logout(){
+   cont_auth=0;
     googleSignIn.signOut();
   }
 
@@ -146,12 +230,14 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: PageView(
         children: <Widget>[
+         
          TimeLinePage(currentUser:currentUser),
-         //RaisedButton(onPressed: logout,child: Text('exit ')),
          NotificatiosPage(),
+         //RaisedButton(onPressed: logout,child: Text('exit ')),
+         
          UpLoadPage(currentUser:currentUser),
          SearchPage(),
-         ProfilePage(profileId: currentUser?.id),
+         ProfilePage(profileId: currentUser?.id, docenteb: currentUser?.docente),
         ],
         controller: pageController,
         onPageChanged: cuandoPaginaCambie,

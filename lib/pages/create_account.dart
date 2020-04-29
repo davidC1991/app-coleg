@@ -73,7 +73,7 @@ class _CreateAccountState extends State<CreateAccount> {
                   ),
                 ),
                GestureDetector(
-                 onTap:submit ,
+                 onTap:submit,
                  child: Container(
                    height: 50.0 ,
                    width: 350.0,

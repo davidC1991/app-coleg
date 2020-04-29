@@ -37,6 +37,7 @@ dependencies:
   path_provider: ^1.6.5
   geolocator: 
   timeago:
+  shared_preferences: ^0.5.7
   
   
   #simple_permissions: ^0.1.9
