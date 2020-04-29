@@ -1,8 +1,8 @@
 import 'package:app_red_social/models/post_model.dart';
 import 'package:flutter/material.dart';
-import 'package:app_red_social/pages/post_screen.dart';
 import 'package:app_red_social/widgets/custom_image.dart';
-import 'package:app_red_social/widgets/posts.dart';
+
+
 
 class PostTile extends StatelessWidget {
   final FireBaseModel post;

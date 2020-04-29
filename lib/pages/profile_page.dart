@@ -1,21 +1,21 @@
 import 'package:app_red_social/bloc/firebase_bloc.dart';
-import 'package:app_red_social/models/post_model.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
-import 'package:app_red_social/widgets/post_tile.dart';
-import 'package:app_red_social/widgets/posts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:app_red_social/widgets/progress.dart';
 import 'package:app_red_social/widgets/header.dart';
 import 'package:app_red_social/models/user.dart';
 
+
+
+
+
 class ProfilePage extends StatefulWidget {
   String profileId ;
   bool docenteb ;
 
-  ProfilePage ({ this .profileId, this.docenteb});
+  ProfilePage ({ this.profileId, this.docenteb});
  
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -315,33 +315,15 @@ List<Widget> publicaciones=   new List();
               buildProfileHeaders(),
               Divider(),
               buildTogglePostOrientation(),
+              tituloMateria(),
               Expanded(child: _crearPost(context, firebaseBloc)),
-              
+                       
             ],
           ),
-          
-          /* ListView(
-            //shrinkWrap: true,
-            children: <Widget>[
-              //buildProfileHeaders(),
-             // Divider(),
-             // buildTogglePostOrientation(),
-             // Divider(
-             //   height: 0.0,
-             // ),
-              //Container(),
-              Text('Matematicas'),
-              Text('Matematicas'),
-              Text('Matematicas'),
-              Text('Matematica'),
-              _crearPost(context, firebaseBloc)
-           
-              
-              //buildProfilePosts(),
-            ],
-          ), */
         );
       }
+          
+         
 
 
   Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
@@ -354,75 +336,51 @@ List<Widget> publicaciones=   new List();
                       //print(snapshot.data[1].materia);
                       //print(snapshot.data.length);
                       final ds= snapshot.data;
-                      return _dibujarCuadriculasReportes(context, ds, firebaseBloc);
+                      
+                      if(postOrientation=='grid'){
+                         return _dibujarCuadriculasReportes(context, ds, firebaseBloc);
+                      }else if (postOrientation=='list'){
+                        
+                           return ListView.builder(
+                             itemCount:ds.length ,
+                             itemBuilder: (context, i){
+                               return  imagen_list(context, ds, i, firebaseBloc);
+                            }
+                           );
+                      }
                     }else{
                       return Center(child: CircularProgressIndicator());
                     }
                   }
                 );
               }
+                                
+                
+
+                     
+
+Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+  return Column(
+    children: <Widget>[
+     _dibujarCuadriculasReportes(context, ds, firebaseBloc),
+   ],
+  );
+}                      
                        
                        
-                        
+ tituloMateria(){
+   return Container(
+     height: 30.0,
+     width: 300.0,
+     color: Colors.blue,
+     child: Text('Castellano'),
+   );
+ }                       
                     
-
-
-
-       buildProfilePosts(List<Widget> publicaciones){
-       
-           
-       // if(isLoading){
-       //   return circularProgress(context);
-       // }//else if(postOrientation=='grid'){
-                                 
-                 return GridView.count(
-                   primary: false,
-                   padding: EdgeInsets.all(1.0),
-                   crossAxisCount: 2,
-                   childAspectRatio: 1.0,
-                   mainAxisSpacing: 1.5,
-                   crossAxisSpacing: 1.5,
-                   shrinkWrap: true,
-                   physics: NeverScrollableScrollPhysics(),
-                   children: publicaciones
-                 );
-        //}else if (postOrientation=='list'){
-        //           return Column(
-        //           children: publicaciones,
-        //         ); 
-
-        //}
-       } 
-
-      
-
-  _dibujarReportes(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
-      return Padding(
-         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: <Widget>[
-            Container(
-              height: 20.0,
-              width: 400.0,
-              color: Colors.blue,
-              child: Text('Materia:${ds.materia}')
-              ),
-             imagen(context, ds, i, firebaseBloc), 
-          ],
-        ),
-      
-      
-      );   
- }
-
-
  _dibujarCuadriculasReportes(BuildContext context, final ds, FirebaseBloc firebaseBloc){
 
-  if(isLoading){
-      return circularProgress(context);
-    }else if(postOrientation=='grid'){
-
-    return GridView.builder(
+  
+  return GridView.builder(
       itemCount: ds.length,
       shrinkWrap: true,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -433,12 +391,36 @@ List<Widget> publicaciones=   new List();
       ),
       itemBuilder: (BuildContext context, int i){
          return imagen(context, ds, i, firebaseBloc);
-      },
-      );
-    }  
+          },);
+       }
+
+
+Widget imagen_list(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+  return Container(
+    height: 200.0,
+    //width: 50.0,
+    padding: EdgeInsets.all(10.0),
+    child: Card(
+                margin: EdgeInsets.symmetric(horizontal: 2.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+            //    child: Image.network(product.documents[i].data['mediaUrl'])
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: FadeInImage(
+                  image: NetworkImage(ds[i].mediaUrl),
+                  placeholder: AssetImage('assets/cargando.gif'),
+                  //height: 70.0,
+                  //width: 100.0,
+                  //fit: BoxFit.cover, 
+              
+            
+          ),
+         ),
+        ),
+  );
 }
-
-
 
  Widget imagen(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
       return Padding(

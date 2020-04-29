@@ -55,8 +55,13 @@ getFollowing() async{
    } 
 
     getProfilePosts() async {
-      //isLoading=true;
-      
+       List<FireBaseModel> posts= new List();
+      //conseguir los Id de todos los profesores disponibles
+      QuerySnapshot snapshot_d= await docenteRef
+      .getDocuments();
+       print('<___________>');
+       print(snapshot_d.documents.length);
+
       QuerySnapshot snapshot = await postsRef
         .document('105951231609486716903')
         .collection('userPosts')
@@ -67,7 +72,7 @@ getFollowing() async{
         if (snapshot.documents.isEmpty){
           return [];
         } 
-         List<FireBaseModel> posts= new List();
+        
           //print(snapshot.documents.length);
           //print(snapshot.documents[1].data['materia']);
          for (var i = 0; i < snapshot.documents.length; i++) {

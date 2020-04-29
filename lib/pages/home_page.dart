@@ -12,7 +12,7 @@ import 'package:app_red_social/pages/upLoad_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_red_social/models/user.dart';
 import 'Notifications_page.dart';
-
+ 
 final GoogleSignIn googleSignIn = GoogleSignIn();
 final StorageReference storageRef = FirebaseStorage.instance.ref();
 final usersRef=Firestore.instance.collection('users');
@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
   controladorSignIn(GoogleSignInAccount account)async{
        if(account != null){
       print('usuario ingresó con la cuentas: ${account.email}');
-      if (account.email == 'callejas.david29@gmail.com'){
+      if (account.email == 'callejas.david29@gmail.com' || account.email == 'm.jcacll@gmail.com'){
         print('Usted es un profesor ---------');
         docente=true;
         await createUser_admin();
