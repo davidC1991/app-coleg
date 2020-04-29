@@ -149,6 +149,9 @@ class _HomePageState extends State<HomePage> {
        print(currentUser);
        print(currentUser.username);
         print('docente: ${currentUser.docente}');
+        
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('keyUsuarioId', currentUser.id);
      }
 
 

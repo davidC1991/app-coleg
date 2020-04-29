@@ -140,14 +140,17 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
     .collection('userPosts')
     .document(postId)
     .setData({
-      'postId' : postId,
-      'ownerId': widget.currentUser.id,
-      'username': widget.currentUser.username,
-      'mediaUrl': mediaUrl, 
-      'description': description,
-      'location': location,
-      'timestamp': timestamp,
-      'likes' : {}       
+
+        'postId'      : postId,
+        'nombreDoc'   : widget.currentUser.username,
+        'materia'     : 'matematicas',
+        'mediaUrl'    : mediaUrl,
+        'descripcion' : description,
+        'calificacion': '5.0',
+        'revisado'    : true,
+        'timestamp'   : timestamp,
+        'likes'       : {}
+         
     }
     );
     captionController.clear();

@@ -1,3 +1,5 @@
+import 'package:app_red_social/bloc/firebase_bloc.dart';
+import 'package:app_red_social/models/post_model.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/widgets/post_tile.dart';
@@ -24,69 +26,23 @@ class _ProfilePageState extends State<ProfilePage> {
   final String currentUserId= currentUser?.id;
   String postOrientation= 'grid';
   bool isLoading= false;
-  int postCount=0;
+ /*  int postCount=0;
   int followerCount=0;
-  int followingCount=0;
-  List<Post> posts=[];
+  int followingCount=0; 
+ */
+List<Widget> publicaciones=   new List();
 
 
   @override
   void initState() { 
     super.initState();
-    getProfilePosts();
+    /* getProfilePosts();
     getFollowers();
     getFollowing();
-    checkIfFollowing();
+    checkIfFollowing(); */
   }
 
-    getFollowing() async{
-       QuerySnapshot snapshot = await followingRef
-          .document(widget.profileId)
-          .collection('userFollowing')
-          .getDocuments();
-      setState(() {
-        followingCount = snapshot.documents.length;
-      }); 
-    }
-
-    checkIfFollowing() async{
-      DocumentSnapshot doc = await followersRef
-          .document(widget.profileId)
-          .collection('userFollowers')
-          .document(currentUserId)
-          .get();
-      setState(() {
-        isFollowing = doc.exists;
-      });    
-   }
     
-   getFollowers() async {
-     QuerySnapshot snapshot = await followersRef
-      .document(widget.profileId)
-      .collection('userFollowers')
-      .getDocuments();
-    setState(() {
-      followerCount = snapshot.documents.length;
-    }); 
-   } 
-
-    getProfilePosts() async {
-      setState(() {
-        isLoading=true;
-      });
-      QuerySnapshot snapshot = await postsRef
-        .document('105951231609486716903')
-        .collection('userPosts')
-        .orderBy('timestamp', descending: true)
-        .getDocuments();
-      setState(() {
-        isLoading=false;
-        postCount= snapshot.documents.length;
-        posts= snapshot.documents.map((doc)=>Post.fromDocument(doc)).toList();
-
-      });  
-    
-    }
    
       Column buildCountColumn(String label, int count){
         return Column(
@@ -240,7 +196,7 @@ class _ProfilePageState extends State<ProfilePage> {
              } 
              User user = User.fromDocument(snapshot.data);
              return Padding(
-               padding: EdgeInsets.all(16.0),
+               padding: EdgeInsets.only(left:15.0,right:15.0, top: 10.0, bottom: 0.0),
                child: Column(
                  children: <Widget>[
                    Row(
@@ -258,9 +214,12 @@ class _ProfilePageState extends State<ProfilePage> {
                               mainAxisSize: MainAxisSize.max,
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: <Widget>[
-                                 buildCountColumn('posts', postCount),
+                                 /* buildCountColumn('posts', postCount),
                                  buildCountColumn('followers', followerCount),
-                                 buildCountColumn('following', followingCount), 
+                                 buildCountColumn('following', followingCount), */
+                                 buildCountColumn('posts', 2),
+                                 buildCountColumn('followers', 2),
+                                 buildCountColumn('following', 2), 
                               ],
                             )  
                           ],
@@ -276,7 +235,7 @@ class _ProfilePageState extends State<ProfilePage> {
                    ), 
                    Container(
                      alignment: Alignment.centerLeft,
-                     padding: EdgeInsets.only(top: 12.0),
+                     padding: EdgeInsets.only(top: 2.0),
                      child: Text(
                        user.username,
                        style: TextStyle(
@@ -287,7 +246,7 @@ class _ProfilePageState extends State<ProfilePage> {
                    ),
                    Container(
                      alignment:  Alignment.centerLeft,
-                     padding: EdgeInsets.only(top:4.0),
+                     padding: EdgeInsets.only(top:.0),
                      child: Text(
                        user.displayName,
                        style: TextStyle(
@@ -310,33 +269,10 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
       
-      buildProfilePosts(){
-        if(isLoading){
-          return circularProgress(context);
-        }else if(postOrientation=='grid'){
-                 List<GridTile> gridTiles= [];
-                 posts.forEach((post){
-                   gridTiles.add(GridTile(child: PostTile(post)));
-                 });
-                 return GridView.count(
-                   crossAxisCount: 3,
-                   childAspectRatio: 1.0,
-                   mainAxisSpacing: 1.5,
-                   crossAxisSpacing: 1.5,
-                   shrinkWrap: true,
-                   physics: NeverScrollableScrollPhysics(),
-                   children: gridTiles,
-                 );
-        }else if (postOrientation=='list'){
-                   return Column(
-                   children: posts,
-                 ); 
-
-        }
        
-            }
-
+ 
     setPostOrientation(String postOrientation){
+      
       setState(() {
         this.postOrientation= postOrientation;
       });
@@ -363,21 +299,175 @@ class _ProfilePageState extends State<ProfilePage> {
     }
       @override
       Widget build(BuildContext context) {
+        final firebaseBloc  = FirebaseBloc();
+        firebaseBloc.cargarPosts();
+
+        firebaseBloc.cargandoStream.listen((a){
+        isLoading=a;
+        print ('isLoading: $isLoading');
+         });
+
+
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
-          body: ListView(
+          body: Column(
             children: <Widget>[
               buildProfileHeaders(),
               Divider(),
               buildTogglePostOrientation(),
-              Divider(
-                height: 0.0,
-              ),
-              Text('Matematicas'),
-              buildProfilePosts(),
+              Expanded(child: _crearPost(context, firebaseBloc)),
+              
             ],
           ),
+          
+          /* ListView(
+            //shrinkWrap: true,
+            children: <Widget>[
+              //buildProfileHeaders(),
+             // Divider(),
+             // buildTogglePostOrientation(),
+             // Divider(
+             //   height: 0.0,
+             // ),
+              //Container(),
+              Text('Matematicas'),
+              Text('Matematicas'),
+              Text('Matematicas'),
+              Text('Matematica'),
+              _crearPost(context, firebaseBloc)
+           
+              
+              //buildProfilePosts(),
+            ],
+          ), */
         );
       }
+
+
+  Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
     
+    return  StreamBuilder(
+                  stream: firebaseBloc.firebaseStream,
+                  builder: (context, snapshot){
+                    
+                    if ( !snapshot.data.isEmpty ){
+                      //print(snapshot.data[1].materia);
+                      //print(snapshot.data.length);
+                      final ds= snapshot.data;
+                      return _dibujarCuadriculasReportes(context, ds, firebaseBloc);
+                    }else{
+                      return Center(child: CircularProgressIndicator());
+                    }
+                  }
+                );
+              }
+                       
+                       
+                        
+                    
+
+
+
+       buildProfilePosts(List<Widget> publicaciones){
+       
+           
+       // if(isLoading){
+       //   return circularProgress(context);
+       // }//else if(postOrientation=='grid'){
+                                 
+                 return GridView.count(
+                   primary: false,
+                   padding: EdgeInsets.all(1.0),
+                   crossAxisCount: 2,
+                   childAspectRatio: 1.0,
+                   mainAxisSpacing: 1.5,
+                   crossAxisSpacing: 1.5,
+                   shrinkWrap: true,
+                   physics: NeverScrollableScrollPhysics(),
+                   children: publicaciones
+                 );
+        //}else if (postOrientation=='list'){
+        //           return Column(
+        //           children: publicaciones,
+        //         ); 
+
+        //}
+       } 
+
+      
+
+  _dibujarReportes(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+      return Padding(
+         padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: <Widget>[
+            Container(
+              height: 20.0,
+              width: 400.0,
+              color: Colors.blue,
+              child: Text('Materia:${ds.materia}')
+              ),
+             imagen(context, ds, i, firebaseBloc), 
+          ],
+        ),
+      
+      
+      );   
  }
+
+
+ _dibujarCuadriculasReportes(BuildContext context, final ds, FirebaseBloc firebaseBloc){
+
+  if(isLoading){
+      return circularProgress(context);
+    }else if(postOrientation=='grid'){
+
+    return GridView.builder(
+      itemCount: ds.length,
+      shrinkWrap: true,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 1.0,
+        mainAxisSpacing: 1.0,
+        childAspectRatio: 1.0,
+      ),
+      itemBuilder: (BuildContext context, int i){
+         return imagen(context, ds, i, firebaseBloc);
+      },
+      );
+    }  
+}
+
+
+
+ Widget imagen(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+      return Padding(
+        padding: const EdgeInsets.all(1.0),
+        child: Card(
+                margin: EdgeInsets.symmetric(horizontal: 2.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+            //    child: Image.network(product.documents[i].data['mediaUrl'])
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: FadeInImage(
+                  image: NetworkImage(ds[i].mediaUrl),
+                  placeholder: AssetImage('assets/cargando.gif'),
+                  height: 70.0,
+                  width: 100.0,
+                  fit: BoxFit.cover, 
+              
+            
+          ),
+         ),
+        ),
+      );
+    }
+
+
+}
+
+
+
+
