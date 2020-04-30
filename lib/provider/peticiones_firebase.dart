@@ -102,13 +102,37 @@ getFollowing() async{
           print('no hay documento');
         }
       }).catchError((error){
-        print(error);
+        //print(error);
       });
       
-      print('materias:$materias'); 
+      //print('materias:$materias'); 
       return materias;
     }
 
+     getCursos() async {
+       List<String> cursos= new List();
+      //conseguir los Id de todos los profesores disponibles
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      usuarioId= prefs.getString('keyUsuarioId');
+
+       QuerySnapshot snapshot_f= await docenteRef
+      .document(usuarioId)
+      .get().then((b){
+        if(b.exists){
+          //print(b.data['materias'][1]);
+          for (var i = 0; i < b.data.length; i++) {
+            cursos.add(b.data['cursos'][i]);
+          }
+        }else{
+          print('no hay documento');
+        }
+      }).catchError((error){
+        //print(error);
+      });
+      
+      //print('cursos:$cursos'); 
+      return cursos;
+    }
 }
        
     

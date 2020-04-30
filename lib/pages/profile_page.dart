@@ -1,7 +1,7 @@
 import 'package:app_red_social/bloc/firebase_bloc.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
-import 'package:app_red_social/widgets/botones_cursos.dart';
+//import 'package:app_red_social/widgets/botones_cursos.dart';
 import 'package:app_red_social/widgets/botones_materias.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +28,8 @@ class _ProfilePageState extends State<ProfilePage> {
   final String currentUserId= currentUser?.id;
   String postOrientation= 'grid';
   bool isLoading= false;
-  
+  String materiaSelected;
+  int contPantalla=0;
   List<Widget> lista= List();
 
  /*  int postCount=0;
@@ -41,7 +42,7 @@ List<Widget> publicaciones=   new List();
   @override
   void initState() { 
     super.initState();
-    pantallaCursos();
+    //pantallaCursos();
     /* getProfilePosts();
     getFollowers();
     getFollowing();
@@ -313,6 +314,15 @@ List<Widget> publicaciones=   new List();
         print ('isLoading: $isLoading');
          });
 
+        firebaseBloc.materiaSelectedStream.listen((b){
+        
+        setState(() {
+        materiaSelected=b;
+        print ('materia seleccionada: $materiaSelected');  
+        });
+         });
+        
+
 
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
@@ -324,12 +334,13 @@ List<Widget> publicaciones=   new List();
 
 
                 
-                  buildProfileHeaders(),
-               
+                   buildProfileHeaders(),
                    buildTogglePostOrientation(),
-                
-                   pantallaCursos()
-                
+                   selectorPantalla(firebaseBloc)
+               
+                   
+                  
+                   
                 
                
                // pantallaCursos(),
@@ -344,7 +355,130 @@ List<Widget> publicaciones=   new List();
         );
       }
           
-  Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
+
+  Widget selectorPantalla(FirebaseBloc firebaseBloc){
+
+     switch (contPantalla) {
+         case 0 : {return pantallaCursos(firebaseBloc);}
+            break;
+         case 1 : {return pantallaMaterias(firebaseBloc);}
+            break; 
+         case 2 : {print("pantalla 2");}
+            break;     
+         
+       }
+       return Container();
+  }
+  
+  Widget  pantallaCursos(FirebaseBloc firebaseBloc){
+
+  
+  firebaseBloc.cargarCursos();
+
+  return StreamBuilder(
+    stream: firebaseBloc.cursosStream,
+    builder: (context, snapshot){
+      if(snapshot.hasData){
+        final cursos=snapshot.data;
+        //print(snapshot.data);
+        //return Container();
+        return botones(cursos,firebaseBloc);
+      }else{
+        return CircularProgressIndicator();
+      }
+    },
+  );
+
+}
+  
+  Widget  pantallaMaterias(FirebaseBloc firebaseBloc){
+
+  
+  firebaseBloc.cargarMaterias();
+
+  return StreamBuilder(
+    stream: firebaseBloc.materiasStream,
+    builder: (context, snapshot){
+      if(snapshot.hasData){
+        final materias=snapshot.data;
+        //print(snapshot.data);
+        //return Container();
+        return botones(materias,firebaseBloc);
+      }else{
+        return CircularProgressIndicator();
+      }
+    },
+  );
+
+}
+
+
+ botones(List boton, FirebaseBloc firebaseBloc){
+    
+
+  return GridView.builder(
+      itemCount: boton.length,
+      shrinkWrap: true,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 1.0,
+        mainAxisSpacing: 1.0,
+        childAspectRatio: 1.0,
+      ),
+      itemBuilder: (BuildContext context, int i){
+         return _crearBotonRedondeado(Colors.blue, Icons.border_all, boton[i],  firebaseBloc);
+        },
+       );
+
+  }
+
+ Widget _crearBotonRedondeado(Color color, IconData icono, String texto, FirebaseBloc firebaseBloc){
+    return GestureDetector(
+      onTap: (){
+        if (contPantalla==0){   //pantalla cursos
+          firebaseBloc.cursoSelectedController.sink.add(texto);
+        }else if(contPantalla==1){
+          firebaseBloc.materiaSelectedController.sink.add(texto);
+        }
+          
+        
+        contPantalla++;
+        firebaseBloc.contPantallaController.sink.add(contPantalla);
+        print('Profesor prresionó el boton : $texto');
+        print('ContPantalla : $contPantalla');
+        setState(() {
+          
+        });      
+      },
+      child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX:0.1,sigmaY: 0.0),
+          child: Container(
+          height: 150.0,
+          margin: EdgeInsets.all(10.0),
+          decoration: BoxDecoration(
+            //color: Color.fromRGBO(62,66,107,0.7).withOpacity(0.2),
+            color: Colors.blue.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20.0)
+             ),
+           child: Column(
+             mainAxisAlignment: MainAxisAlignment.spaceAround,
+             children: <Widget>[
+                CircleAvatar(
+                  backgroundColor:color,
+                  radius: 35.0,
+                  child: Icon(icono, color: Colors.white, size: 30.0),
+                ),
+              Text(texto, style: TextStyle(color: Colors.black)),  
+              
+             ],
+           ),  
+        ),
+      ),
+    );
+  }
+
+
+Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
     
     return  StreamBuilder(
                   stream: firebaseBloc.firebaseStream,
@@ -373,11 +507,10 @@ List<Widget> publicaciones=   new List();
                 );
               }
                                 
-                
-
-     
-
 Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+   
+
+  
   return Column(
     children: <Widget>[
      _dibujarCuadriculasReportes(context, ds, firebaseBloc),
@@ -385,8 +518,8 @@ Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc fire
   );
 }                      
                        
+tituloMateria(){
                        
- tituloMateria(){
    return Container(
      height: 30.0,
      width: 300.0,
@@ -395,7 +528,7 @@ Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc fire
    );
  }                       
                     
- _dibujarCuadriculasReportes(BuildContext context, final ds, FirebaseBloc firebaseBloc){
+_dibujarCuadriculasReportes(BuildContext context, final ds, FirebaseBloc firebaseBloc){
 
   
   return GridView.builder(
@@ -412,8 +545,8 @@ Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc fire
           },);
        }
 
-
 Widget imagen_list(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+
   return Container(
     height: 200.0,
     //width: 50.0,
