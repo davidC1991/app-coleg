@@ -1,9 +1,11 @@
 import 'package:rxdart/rxdart.dart';
 import 'package:app_red_social/provider/peticiones_firebase.dart';
+export 'package:app_red_social/provider/peticiones_firebase.dart';
 
 class FirebaseBloc{
 
   final _postController = new BehaviorSubject();
+  final _materiasController = new BehaviorSubject();
   //final _articulosCarritoController = new BehaviorSubject();
   final _cargandoController   = new BehaviorSubject<bool>();
 
@@ -11,7 +13,7 @@ class FirebaseBloc{
 
 
   Stream get firebaseStream => _postController;
-  //Stream get articulosCarritoStream => _articulosCarritoController;
+  Stream get materiasStream => _materiasController;
   Stream<bool> get cargandoStream => _cargandoController;
 
 cargarPosts()async {
@@ -22,13 +24,20 @@ cargarPosts()async {
      
   }
 
-
+ cargarMaterias()async {
+    //_cargandoController.sink.add(true);
+     final materias= await _datosProvider.getMaterias();
+     _materiasController.sink.add(materias);
+     //_cargandoController.sink.add(false);
+     
+  }
 
 
 
  dispose(){
     _postController?.close();
     _cargandoController?.close();
+    _materiasController?.close();
     //_articulosCarritoController?.close();
   }
 

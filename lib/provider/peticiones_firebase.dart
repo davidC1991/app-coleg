@@ -57,11 +57,8 @@ getFollowing() async{
     getProfilePosts() async {
        List<FireBaseModel> posts= new List();
       //conseguir los Id de todos los profesores disponibles
-      QuerySnapshot snapshot_d= await docenteRef
-      .getDocuments();
-       print('<___________>');
-       print(snapshot_d.documents.length);
-
+         
+      
       QuerySnapshot snapshot = await postsRef
         .document('105951231609486716903')
         .collection('userPosts')
@@ -85,6 +82,33 @@ getFollowing() async{
 
            return posts;
     }
+
+    
+    getMaterias() async {
+       List<String> materias= new List();
+      //conseguir los Id de todos los profesores disponibles
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      usuarioId= prefs.getString('keyUsuarioId');
+
+       QuerySnapshot snapshot_d= await docenteRef
+      .document(usuarioId)
+      .get().then((b){
+        if(b.exists){
+          //print(b.data['materias'][1]);
+          for (var i = 0; i < b.data.length; i++) {
+            materias.add(b.data['materias'][i]);
+          }
+        }else{
+          print('no hay documento');
+        }
+      }).catchError((error){
+        print(error);
+      });
+      
+      print('materias:$materias'); 
+      return materias;
+    }
+
 }
        
     

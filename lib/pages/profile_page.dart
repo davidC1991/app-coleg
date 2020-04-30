@@ -1,6 +1,8 @@
 import 'package:app_red_social/bloc/firebase_bloc.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
+import 'package:app_red_social/widgets/botones_cursos.dart';
+import 'package:app_red_social/widgets/botones_materias.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:app_red_social/widgets/progress.dart';
@@ -8,13 +10,12 @@ import 'package:app_red_social/widgets/header.dart';
 import 'package:app_red_social/models/user.dart';
 
 
-
-
+import 'dart:ui';
 
 class ProfilePage extends StatefulWidget {
   String profileId ;
   bool docenteb ;
-
+  
   ProfilePage ({ this.profileId, this.docenteb});
  
   @override
@@ -22,10 +23,14 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  
   bool isFollowing = false;
   final String currentUserId= currentUser?.id;
   String postOrientation= 'grid';
   bool isLoading= false;
+  
+  List<Widget> lista= List();
+
  /*  int postCount=0;
   int followerCount=0;
   int followingCount=0; 
@@ -36,6 +41,7 @@ List<Widget> publicaciones=   new List();
   @override
   void initState() { 
     super.initState();
+    pantallaCursos();
     /* getProfilePosts();
     getFollowers();
     getFollowing();
@@ -300,8 +306,8 @@ List<Widget> publicaciones=   new List();
       @override
       Widget build(BuildContext context) {
         final firebaseBloc  = FirebaseBloc();
-        firebaseBloc.cargarPosts();
-
+        //firebaseBloc.cargarPosts();
+          
         firebaseBloc.cargandoStream.listen((a){
         isLoading=a;
         print ('isLoading: $isLoading');
@@ -310,22 +316,34 @@ List<Widget> publicaciones=   new List();
 
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
-          body: Column(
-            children: <Widget>[
-              buildProfileHeaders(),
-              Divider(),
-              buildTogglePostOrientation(),
-              tituloMateria(),
-              Expanded(child: _crearPost(context, firebaseBloc)),
-                       
-            ],
-          ),
+          body: SingleChildScrollView(
+           
+           
+              child: Column(
+                children: <Widget>[
+
+
+                
+                  buildProfileHeaders(),
+               
+                   buildTogglePostOrientation(),
+                
+                   pantallaCursos()
+                
+                
+               
+               // pantallaCursos(),
+               // SingleChildScrollView(child: botonesMaterias()),
+                //botonesMaterias()
+                //tituloMateria(),
+                //Expanded(child: _crearPost(context, firebaseBloc)),
+                         
+              ],
+            ),
+          )          
         );
       }
           
-         
-
-
   Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
     
     return  StreamBuilder(
@@ -357,7 +375,7 @@ List<Widget> publicaciones=   new List();
                                 
                 
 
-                     
+     
 
 Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
   return Column(
