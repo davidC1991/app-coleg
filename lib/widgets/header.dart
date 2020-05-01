@@ -1,3 +1,4 @@
+import 'package:app_red_social/pages/subir_tarea.dart';
 import 'package:flutter/material.dart';
 
 AppBar header(BuildContext context, {bool esTituloApp=false, String textoTitulo, removeBackButton= false} ){
@@ -14,7 +15,20 @@ AppBar header(BuildContext context, {bool esTituloApp=false, String textoTitulo,
     ),
     centerTitle: true,
     backgroundColor: Theme.of(context).accentColor,
-      
+    actions: <Widget>[
+         IconButton(
+                   icon: Icon(Icons.menu),
+                                onPressed: ()=>  Navigator.pushNamed(context, 'foto')
+                                //Navigator.push(context, MaterialPageRoute(builder: (context) => SubirTareaPage()))
+                                //
+                              )
+                             
+                               
+
+          
+          
+         
+        ],  
   );
 
 }

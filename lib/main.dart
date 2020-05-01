@@ -1,5 +1,7 @@
 
 import 'package:app_red_social/bloc/provider.dart';
+import 'package:app_red_social/pages/subir_tarea.dart';
+import 'package:app_red_social/pages/upLoad_page.dart';
 import 'package:flutter/material.dart';
 import 'package:app_red_social/pages/home_page.dart';
 
@@ -25,6 +27,8 @@ class MyApp extends StatelessWidget {
         initialRoute: 'home',
         routes: {
           'home' : (BuildContext context) => HomePage(),
+          'subirTarea' : (BuildContext context) => SubirTareaPage(),
+          'foto' : (BuildContext context) => UpLoadPage(),
         },
       ),
     );

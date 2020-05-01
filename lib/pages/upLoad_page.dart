@@ -87,7 +87,7 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
   
   Container buildSplashScreen(){
     return Container(
-      
+      //color: Colors.red,
       color: Theme.of(context).accentColor.withOpacity(0.6),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -112,7 +112,7 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
           )
         ],
       ),
-    );
+    ); 
   }
 
   clearImage(){
@@ -181,28 +181,8 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
     );
     }
 
- buildUploadForm(FirebaseBloc firebaseBloc){
-   firebaseBloc.cargandoStream.listen((a){
-        isLoading=a;
-        print ('isLoading: $isLoading');
-         });
-
-        firebaseBloc.materiaSelectedStream.listen((b){
-        
-        setState(() {
-        materiaSelected=b;
-        print ('materia seleccionada: $materiaSelected');  
-        });
-         });
-        
-        firebaseBloc.cursoSelectedStream.listen((c){
-        
-        setState(() {
-        cursoSelected=c;
-        print ('curso seleccionado: $cursoSelected');  
-        });
-         });
-
+ buildUploadForm(){
+  
    return Scaffold(
      appBar: AppBar(
        backgroundColor:Colors.white70,
@@ -311,9 +291,9 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
 
   @override
   Widget build(BuildContext context) {
-     final firebaseBloc  = FirebaseBloc();
+    // final firebaseBloc  = FirebaseBloc();
     super.build(context);
-     return file == null ? buildSplashScreen() : buildUploadForm(firebaseBloc);
+     return file == null ? buildSplashScreen() : buildUploadForm();
   }
 }
   

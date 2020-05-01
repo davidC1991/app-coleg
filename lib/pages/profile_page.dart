@@ -1,6 +1,8 @@
 import 'package:app_red_social/bloc/firebase_bloc.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
+import 'package:app_red_social/pages/subir_tarea.dart';
+import 'package:app_red_social/pages/upLoad_page.dart';
 //import 'package:app_red_social/widgets/botones_cursos.dart';
 import 'package:app_red_social/widgets/botones_materias.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -11,6 +13,8 @@ import 'package:app_red_social/models/user.dart';
 
 
 import 'dart:ui';
+
+import 'package:flutter/scheduler.dart';
 
 class ProfilePage extends StatefulWidget {
   String profileId ;
@@ -40,6 +44,7 @@ class _ProfilePageState extends State<ProfilePage> {
  */
 List<Widget> publicaciones=   new List();
 
+final firebaseBloc  = FirebaseBloc();
 
   @override
   void initState() { 
@@ -49,6 +54,29 @@ List<Widget> publicaciones=   new List();
     getFollowers();
     getFollowing();
     checkIfFollowing(); */
+    
+        //firebaseBloc.cargarPosts();
+          
+        firebaseBloc.cargandoStream.listen((a){
+        isLoading=a;
+        print ('isLoading: $isLoading');
+         });
+
+        firebaseBloc.materiaSelectedStream.listen((b){
+        
+        setState(() {
+        materiaSelected=b;
+        print ('materia seleccionada: $materiaSelected');  
+        });
+         });
+        
+        firebaseBloc.cursoSelectedStream.listen((c){
+        
+        setState(() {
+        cursoSelected=c;
+        print ('curso seleccionado: $cursoSelected');  
+        });
+         });
   }
 
     
@@ -83,11 +111,13 @@ List<Widget> publicaciones=   new List();
     
       Container buildButton({String text, Function function}){
         return Container(
+          height: 35.0,
+          //color: Colors.pink.withOpacity(0.3),
           padding: EdgeInsets.only(top:1.0, left:77.0 ),
           child: FlatButton(
           onPressed: function,
           child: Container(
-            width: 250.0,
+            width: 200.0,
             height: 27.0,
             child: Text(
               text,
@@ -106,6 +136,31 @@ List<Widget> publicaciones=   new List();
             ),
           ),
           ),
+        );
+      }
+      FlatButton tareaButton(){
+        return FlatButton(
+          onPressed: ()=>  Navigator.pushNamed(context, 'foto'),
+          child: Container(
+            width: 200.0,
+            height: 27.0,
+            child: Text(
+              'Crear Tarea',
+              style: TextStyle(
+                color: isFollowing ? Colors.black : Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isFollowing ? Colors.white : Colors.blue,
+              border: Border.all(
+                color: isFollowing ? Colors.grey : Colors.blue,
+              ),
+              borderRadius: BorderRadius.circular(5.0),
+            ),
+          ),
+         
         );
       }
     
@@ -230,30 +285,48 @@ List<Widget> publicaciones=   new List();
                                  buildCountColumn('followers', 2),
                                  buildCountColumn('following', 2), 
                               ],
-                            )  
+                            )
+                              
                           ],
                         )
-                      )   
+                      ),
+                         
                      ],
                    ),
-                   Row(
-                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                     children: <Widget>[
-                       buildProfileButton(),
-                     ],
-                   ), 
+                 
+                     Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                       children: <Widget>[
+                         buildProfileButton(),
+                         
+                       ],
+                     ),
+                    
+                    
                    Container(
+                     //color: Colors.blue.withOpacity(0.3),
                      alignment: Alignment.centerLeft,
-                     padding: EdgeInsets.only(top: 2.0),
-                     child: Text(
-                       user.username,
-                       style: TextStyle(
-                         fontWeight: FontWeight.bold,
-                         fontSize: 16.0
-                       ),
+                     padding: EdgeInsets.only(top: 0.0),
+                     height: 27.0,
+                     child: Row(
+                       mainAxisAlignment: MainAxisAlignment.start,
+                       mainAxisSize: MainAxisSize.max,
+                       crossAxisAlignment: CrossAxisAlignment.start,
+                       children: <Widget>[
+                         Text(
+                           user.username,
+                           style: TextStyle(
+                             fontWeight: FontWeight.bold,
+                             fontSize: 16.0
+                           ),
+                         ),
+                         SizedBox(width: 24.0,),
+                         tareaButton(),
+                       ],
                      ),
                    ),
                    Container(
+                     //color: Colors.yellow.withOpacity(0.3),
                      alignment:  Alignment.centerLeft,
                      padding: EdgeInsets.only(top:.0),
                      child: Text(
@@ -265,6 +338,7 @@ List<Widget> publicaciones=   new List();
                      ),
                    ),
                    Container(
+                     //color: Colors.red.withOpacity(0.3),
                      alignment: Alignment.centerLeft,
                      padding: EdgeInsets.only(top: 20),
                      child: Text(
@@ -308,31 +382,9 @@ List<Widget> publicaciones=   new List();
     }
       @override
       Widget build(BuildContext context) {
-        final firebaseBloc  = FirebaseBloc();
-        //firebaseBloc.cargarPosts();
-          
-        firebaseBloc.cargandoStream.listen((a){
-        isLoading=a;
-        print ('isLoading: $isLoading');
-         });
-
-        firebaseBloc.materiaSelectedStream.listen((b){
         
-        setState(() {
-        materiaSelected=b;
-        print ('materia seleccionada: $materiaSelected');  
-        });
-         });
         
-        firebaseBloc.cursoSelectedStream.listen((c){
-        
-        setState(() {
-        cursoSelected=c;
-        print ('curso seleccionado: $cursoSelected');  
-        });
-         });
-        
-
+ 
 
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
@@ -369,18 +421,29 @@ List<Widget> publicaciones=   new List();
   Widget selectorPantalla(FirebaseBloc firebaseBloc){
 
      switch (contPantalla) {
-         case 0 : {return pantallaCursos(firebaseBloc);}
+         case 0 : {return pantallaCursos();}
             break;
-         case 1 : {return pantallaMaterias(firebaseBloc);}
+         case 1 : {return pantallaMaterias();}
             break; 
-         case 2 : {print("pantalla 2");}
-            break;     
-         
+         case 2 : {
+              
+            
+              SchedulerBinding.instance.addPostFrameCallback((_) {
+                
+               // Navigator.push(context, MaterialPageRoute(builder: (context) => SubirTareaPage()));
+               
+              });
+              
+             }
+         break;     
        }
        return Container();
-  }
+      }
+
+             
+         
   
-  Widget  pantallaCursos(FirebaseBloc firebaseBloc){
+  Widget  pantallaCursos(){
 
   
   firebaseBloc.cargarCursos();
@@ -392,7 +455,7 @@ List<Widget> publicaciones=   new List();
         cursos=snapshot.data;
         print(snapshot.data);
         //return Container();
-        return botones(cursos,firebaseBloc);
+        return botones(cursos);
       }else{
         return CircularProgressIndicator();
       }
@@ -401,7 +464,7 @@ List<Widget> publicaciones=   new List();
 
 }
   
-  Widget  pantallaMaterias(FirebaseBloc firebaseBloc){
+  Widget  pantallaMaterias( ){
 
   
   firebaseBloc.cargarMaterias();
@@ -416,7 +479,7 @@ List<Widget> publicaciones=   new List();
         final materias=snapshot.data[cursoSelected];
         print(materias);
         //cursoSelected
-        return botones(materias,firebaseBloc);
+        return botones(materias);
       //return Container();
       }else{
         return CircularProgressIndicator();
@@ -427,7 +490,7 @@ List<Widget> publicaciones=   new List();
 }
 
  
- botones(List boton, FirebaseBloc firebaseBloc){
+ botones(List boton){
     
 
   return GridView.builder(
@@ -440,13 +503,13 @@ List<Widget> publicaciones=   new List();
         childAspectRatio: 1.0,
       ),
       itemBuilder: (BuildContext context, int i){
-         return _crearBotonRedondeado(Colors.blue, Icons.border_all, boton[i],  firebaseBloc);
+         return _crearBotonRedondeado(Colors.blue, Icons.border_all, boton[i]);
         },
        );
 
   }
 
- Widget _crearBotonRedondeado(Color color, IconData icono, String texto, FirebaseBloc firebaseBloc){
+ Widget _crearBotonRedondeado(Color color, IconData icono, String texto){
     return GestureDetector(
       onTap: (){
         if (contPantalla==0){   //pantalla cursos
@@ -460,9 +523,9 @@ List<Widget> publicaciones=   new List();
         firebaseBloc.contPantallaController.sink.add(contPantalla);
         print('Profesor prresionó el boton : $texto');
         print('ContPantalla : $contPantalla');
-        setState(() {
+        /* setState(() {
           
-        });      
+        });  */     
       },
       child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX:0.1,sigmaY: 0.0),
@@ -492,7 +555,7 @@ List<Widget> publicaciones=   new List();
   }
 
 
-Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
+Widget _crearPost(BuildContext context){
     
     return  StreamBuilder(
                   stream: firebaseBloc.firebaseStream,
@@ -504,13 +567,13 @@ Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
                       final ds= snapshot.data;
                       
                       if(postOrientation=='grid'){
-                         return _dibujarCuadriculasReportes(context, ds, firebaseBloc);
+                         return _dibujarCuadriculasReportes(context, ds);
                       }else if (postOrientation=='list'){
                         
                            return ListView.builder(
                              itemCount:ds.length ,
                              itemBuilder: (context, i){
-                               return  imagen_list(context, ds, i, firebaseBloc);
+                               return  imagen_list(context, ds, i);
                             }
                            );
                       }
@@ -521,13 +584,13 @@ Widget _crearPost(BuildContext context, FirebaseBloc firebaseBloc){
                 );
               }
                                 
-Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+Widget _tablaDeMaterias(BuildContext context, final ds, int i){
    
 
   
   return Column(
     children: <Widget>[
-     _dibujarCuadriculasReportes(context, ds, firebaseBloc),
+     _dibujarCuadriculasReportes(context, ds),
    ],
   );
 }                      
@@ -542,7 +605,7 @@ tituloMateria(){
    );
  }                       
                     
-_dibujarCuadriculasReportes(BuildContext context, final ds, FirebaseBloc firebaseBloc){
+_dibujarCuadriculasReportes(BuildContext context, final ds){
 
   
   return GridView.builder(
@@ -555,11 +618,11 @@ _dibujarCuadriculasReportes(BuildContext context, final ds, FirebaseBloc firebas
         childAspectRatio: 1.0,
       ),
       itemBuilder: (BuildContext context, int i){
-         return imagen(context, ds, i, firebaseBloc);
+         return imagen(context, ds, i);
           },);
        }
 
-Widget imagen_list(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+Widget imagen_list(BuildContext context, final ds, int i){
 
   return Container(
     height: 200.0,
@@ -587,7 +650,7 @@ Widget imagen_list(BuildContext context, final ds, int i, FirebaseBloc firebaseB
   );
 }
 
- Widget imagen(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+ Widget imagen(BuildContext context, final ds, int i){
       return Padding(
         padding: const EdgeInsets.all(1.0),
         child: Card(
