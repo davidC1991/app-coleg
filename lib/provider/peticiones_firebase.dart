@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:app_red_social/models/post_model.dart';
 import 'package:app_red_social/widgets/posts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,7 +86,7 @@ getFollowing() async{
     }
 
     
-    getMaterias() async {
+    getCursos() async {
        List<String> materias= new List();
       //conseguir los Id de todos los profesores disponibles
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -96,7 +98,7 @@ getFollowing() async{
         if(b.exists){
           //print(b.data['materias'][1]);
           for (var i = 0; i < b.data.length; i++) {
-            materias.add(b.data['materias'][i]);
+            materias.add(b.data['cursoInd'][i]);
           }
         }else{
           print('no hay documento');
@@ -109,19 +111,22 @@ getFollowing() async{
       return materias;
     }
 
-     getCursos() async {
+     getCursosMaterias() async {
        List<String> cursos= new List();
-      //conseguir los Id de todos los profesores disponibles
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      usuarioId= prefs.getString('keyUsuarioId');
-
-       QuerySnapshot snapshot_f= await docenteRef
+       Map<String, Object> materiasYcursos= new Map();
+       List r = new List();
+       //final materiasYcursos= new Map();
+      
+       SharedPreferences prefs = await SharedPreferences.getInstance();
+       usuarioId= prefs.getString('keyUsuarioId');
+      //------------------------------------------------------
+      /* QuerySnapshot snapshot_d= await docenteRef
       .document(usuarioId)
       .get().then((b){
         if(b.exists){
-          //print(b.data['materias'][1]);
+          print(b.data['cursoInd']);
           for (var i = 0; i < b.data.length; i++) {
-            cursos.add(b.data['cursos'][i]);
+            cursos.add(b.data['cursoInd'][i]);
           }
         }else{
           print('no hay documento');
@@ -129,9 +134,32 @@ getFollowing() async{
       }).catchError((error){
         //print(error);
       });
-      
-      //print('cursos:$cursos'); 
-      return cursos;
+       */
+      //------------------------------------------------------
+       QuerySnapshot snapshot_f= await docenteRef
+      .document(usuarioId)
+      .get().then((b){
+        if(b.exists){
+          //print(b.data['curso']);
+          //print(b.data['curso'][b.data['cursoInd'][0]]);
+          //r.add(b.data['curso'][b.data['cursoInd'][0]]);
+          //print(b.data['cursoInd'][0]);
+         // materiasYcursos[b.data['cursoInd'][0]]=b.data['curso'][b.data['cursoInd'][0]];
+               
+          for (var i = 0; i < b.data['cursoInd'].length; i++) {
+           materiasYcursos[b.data['cursoInd'][i]]=b.data['curso'][b.data['cursoInd'][i]];
+          }
+          print('--|--');
+          
+        }else{
+          print('no hay documento');
+        }
+      }).catchError((error){
+        //print(error);
+      }); 
+      //--------------------------------------------------------------------------
+      //print(materiasYcursos);
+      return materiasYcursos;
     }
 }
        

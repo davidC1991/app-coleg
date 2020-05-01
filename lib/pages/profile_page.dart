@@ -29,7 +29,9 @@ class _ProfilePageState extends State<ProfilePage> {
   String postOrientation= 'grid';
   bool isLoading= false;
   String materiaSelected;
+  String cursoSelected;
   int contPantalla=0;
+  List<String> cursos= List();
   List<Widget> lista= List();
 
  /*  int postCount=0;
@@ -322,6 +324,14 @@ List<Widget> publicaciones=   new List();
         });
          });
         
+        firebaseBloc.cursoSelectedStream.listen((c){
+        
+        setState(() {
+        cursoSelected=c;
+        print ('curso seleccionado: $cursoSelected');  
+        });
+         });
+        
 
 
         return Scaffold(
@@ -379,8 +389,8 @@ List<Widget> publicaciones=   new List();
     stream: firebaseBloc.cursosStream,
     builder: (context, snapshot){
       if(snapshot.hasData){
-        final cursos=snapshot.data;
-        //print(snapshot.data);
+        cursos=snapshot.data;
+        print(snapshot.data);
         //return Container();
         return botones(cursos,firebaseBloc);
       }else{
@@ -396,14 +406,18 @@ List<Widget> publicaciones=   new List();
   
   firebaseBloc.cargarMaterias();
 
-  return StreamBuilder(
+  return StreamBuilder <Map<String,Object>>(
     stream: firebaseBloc.materiasStream,
     builder: (context, snapshot){
+      print('---------------');
       if(snapshot.hasData){
-        final materias=snapshot.data;
-        //print(snapshot.data);
-        //return Container();
+        print(snapshot.data);
+        print('curso seleccionado:$cursoSelected');
+        final materias=snapshot.data[cursoSelected];
+        print(materias);
+        //cursoSelected
         return botones(materias,firebaseBloc);
+      //return Container();
       }else{
         return CircularProgressIndicator();
       }
@@ -412,7 +426,7 @@ List<Widget> publicaciones=   new List();
 
 }
 
-
+ 
  botones(List boton, FirebaseBloc firebaseBloc){
     
 

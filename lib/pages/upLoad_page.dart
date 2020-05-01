@@ -1,5 +1,6 @@
 
 import 'dart:io';
+import 'package:app_red_social/bloc/firebase_bloc.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/widgets/progress.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -32,7 +33,10 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
  File file ;
  bool isUploading= false;
  String postId= Uuid().v4();
-
+ bool isLoading;
+ String cursoSelected;
+ String materiaSelected;
+ 
  handleTakePhoto() async {
     Navigator.pop(context);
       File file = await ImagePicker.pickImage(
@@ -127,6 +131,7 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
     });
     
   }
+
  Future<String> uploadImage(imageFile) async{
    StorageUploadTask uploadTask = storageRef.child('post_$postId.jpg').putFile(imageFile);
    StorageTaskSnapshot storageSnap = await uploadTask.onComplete;
@@ -176,7 +181,28 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
     );
     }
 
- buildUploadForm(){
+ buildUploadForm(FirebaseBloc firebaseBloc){
+   firebaseBloc.cargandoStream.listen((a){
+        isLoading=a;
+        print ('isLoading: $isLoading');
+         });
+
+        firebaseBloc.materiaSelectedStream.listen((b){
+        
+        setState(() {
+        materiaSelected=b;
+        print ('materia seleccionada: $materiaSelected');  
+        });
+         });
+        
+        firebaseBloc.cursoSelectedStream.listen((c){
+        
+        setState(() {
+        cursoSelected=c;
+        print ('curso seleccionado: $cursoSelected');  
+        });
+         });
+
    return Scaffold(
      appBar: AppBar(
        backgroundColor:Colors.white70,
@@ -285,8 +311,9 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
 
   @override
   Widget build(BuildContext context) {
+     final firebaseBloc  = FirebaseBloc();
     super.build(context);
-     return file == null ? buildSplashScreen() : buildUploadForm();
+     return file == null ? buildSplashScreen() : buildUploadForm(firebaseBloc);
   }
 }
   

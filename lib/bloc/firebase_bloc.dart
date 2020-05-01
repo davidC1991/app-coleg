@@ -5,7 +5,7 @@ export 'package:app_red_social/provider/peticiones_firebase.dart';
 class FirebaseBloc{
 
   final _postController = new BehaviorSubject();
-  final _materiasController = new BehaviorSubject();
+  final _materiasController = new BehaviorSubject<Map<String,Object>>();
   final _cursosController = new BehaviorSubject();
   //final _articulosCarritoController = new BehaviorSubject();
   final _cargandoController   = new BehaviorSubject<bool>();
@@ -18,12 +18,12 @@ class FirebaseBloc{
 
 
   Stream get firebaseStream => _postController;
-  Stream get materiasStream => _materiasController;
+  Stream <Map<String,Object>>get materiasStream => _materiasController;
   Stream get cursosStream => _cursosController;
   Stream<bool> get cargandoStream => _cargandoController;
   Stream<int> get contPantallaStream => contPantallaController;
   Stream<String> get materiaSelectedStream => materiaSelectedController;
-  Stream<String> get cursoSelectedStream => materiaSelectedController;
+  Stream<String> get cursoSelectedStream => cursoSelectedController;
 
 cargarPosts()async {
   _cargandoController.sink.add(true);
@@ -35,7 +35,8 @@ cargarPosts()async {
 
  cargarMaterias()async {
     //_cargandoController.sink.add(true);
-     final materias= await _datosProvider.getMaterias();
+     final materias= await _datosProvider.getCursosMaterias();
+     //print(materias);
      _materiasController.sink.add(materias);
      //_cargandoController.sink.add(false);
      
