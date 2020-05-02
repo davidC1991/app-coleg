@@ -1,6 +1,7 @@
 
 import 'dart:convert';
 
+import 'package:app_red_social/bloc/firebase_bloc.dart';
 import 'package:app_red_social/models/post_model.dart';
 import 'package:app_red_social/widgets/posts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,6 +14,7 @@ int postCount=0;
 int followerCount=0;
 int followingCount=0;
 List<Post> posts=[];
+//FirebaseBloc firebaseBloc= FirebaseBloc();
 
 getFollowing() async{
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -120,22 +122,6 @@ getFollowing() async{
        SharedPreferences prefs = await SharedPreferences.getInstance();
        usuarioId= prefs.getString('keyUsuarioId');
       //------------------------------------------------------
-      /* QuerySnapshot snapshot_d= await docenteRef
-      .document(usuarioId)
-      .get().then((b){
-        if(b.exists){
-          print(b.data['cursoInd']);
-          for (var i = 0; i < b.data.length; i++) {
-            cursos.add(b.data['cursoInd'][i]);
-          }
-        }else{
-          print('no hay documento');
-        }
-      }).catchError((error){
-        //print(error);
-      });
-       */
-      //------------------------------------------------------
        QuerySnapshot snapshot_f= await docenteRef
       .document(usuarioId)
       .get().then((b){
@@ -147,7 +133,9 @@ getFollowing() async{
          // materiasYcursos[b.data['cursoInd'][0]]=b.data['curso'][b.data['cursoInd'][0]];
                
           for (var i = 0; i < b.data['cursoInd'].length; i++) {
+            if(b.data['cursoInd'][i]!=null && b.data['curso'][b.data['cursoInd'][i]]!=null){
            materiasYcursos[b.data['cursoInd'][i]]=b.data['curso'][b.data['cursoInd'][i]];
+            }
           }
           print('--|--');
           
@@ -159,7 +147,36 @@ getFollowing() async{
       }); 
       //--------------------------------------------------------------------------
       //print(materiasYcursos);
+      if(materiasYcursos==null){
+        print('No hay datos en esta peticion --------------------->');
+      }
       return materiasYcursos;
+    }
+
+    getTareas() async{
+     
+  
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      usuarioId= prefs.getString('keyUsuarioId');
+     
+    
+      QuerySnapshot snapshot = await postsRef
+        .document(usuarioId)
+        .collection('userPosts')
+        .orderBy('timestamp', descending: true)
+        
+        .getDocuments();
+        /* print('==================');
+        print(snapshot.documents[0].data);
+        print('=========|=========');
+        print(snapshot.documents[0].data.containsKey('curso'));
+        print('=================='); */
+        
+        if (snapshot.documents.isEmpty){
+          return [];
+        } 
+        
+        return snapshot;         
     }
 }
        

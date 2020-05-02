@@ -6,6 +6,7 @@ import 'package:app_red_social/pages/upLoad_page.dart';
 //import 'package:app_red_social/widgets/botones_cursos.dart';
 import 'package:app_red_social/widgets/botones_materias.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:app_red_social/widgets/progress.dart';
 import 'package:app_red_social/widgets/header.dart';
@@ -37,6 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
   int contPantalla=0;
   List<String> cursos= List();
   List<Widget> lista= List();
+  List<DocumentSnapshot> tareas = new List();
 
  /*  int postCount=0;
   int followerCount=0;
@@ -321,7 +323,8 @@ final firebaseBloc  = FirebaseBloc();
                            ),
                          ),
                          SizedBox(width: 24.0,),
-                         tareaButton(),
+                         
+                         contPantalla==1?tareaButton():Container(),
                        ],
                      ),
                    ),
@@ -355,7 +358,7 @@ final firebaseBloc  = FirebaseBloc();
        
  
     setPostOrientation(String postOrientation){
-      
+      print('orientacion: $postOrientation');
       setState(() {
         this.postOrientation= postOrientation;
       });
@@ -366,13 +369,19 @@ final firebaseBloc  = FirebaseBloc();
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
           IconButton(
-            onPressed:() => setPostOrientation('grid'),
+            onPressed:() { 
+              setPostOrientation('grid');
+              //setState(() {});
+              },
             icon: Icon(Icons.grid_on),
             color: postOrientation == 'grid' ? Theme.of(context).accentColor :
             Colors.grey,
           ),
           IconButton(
-            onPressed:() => setPostOrientation('list'),
+            onPressed:() { 
+              setPostOrientation('list');
+              //setState(() {});
+              },
             icon: Icon(Icons.list),
             color: postOrientation == 'list' ? Theme.of(context).accentColor :
             Colors.grey,
@@ -388,17 +397,14 @@ final firebaseBloc  = FirebaseBloc();
 
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
-          body: SingleChildScrollView(
-           
-           
-              child: Column(
+          body: Column(
                 children: <Widget>[
 
 
                 
                    buildProfileHeaders(),
                    buildTogglePostOrientation(),
-                   selectorPantalla(firebaseBloc)
+                   Expanded(child: Container(child: selectorPantalla(firebaseBloc)))
                
                    
                   
@@ -412,7 +418,7 @@ final firebaseBloc  = FirebaseBloc();
                 //Expanded(child: _crearPost(context, firebaseBloc)),
                          
               ],
-            ),
+          
           )          
         );
       }
@@ -425,23 +431,44 @@ final firebaseBloc  = FirebaseBloc();
             break;
          case 1 : {return pantallaMaterias();}
             break; 
-         case 2 : {
-              
-            
-              SchedulerBinding.instance.addPostFrameCallback((_) {
-                
-               // Navigator.push(context, MaterialPageRoute(builder: (context) => SubirTareaPage()));
-               
-              });
-              
-             }
+         case 2 : {return pantallaTareas();}
          break;     
        }
        return Container();
       }
 
-             
-         
+        
+  Widget  pantallaTareas(){
+
+  firebaseBloc.cargarTareas();
+
+   return StreamBuilder<List<DocumentSnapshot>>(
+    stream: firebaseBloc.tareasStream,
+    builder: (context, snapshot){
+      if(snapshot.hasData){
+       //tareas.clear();
+       tareas =snapshot.data;
+        print(tareas);
+
+        if(postOrientation=='grid'){
+             return _dibujarCuadriculasReportes(context, tareas);
+          }else if (postOrientation=='list'){
+            return ListView.builder(
+            shrinkWrap: true,
+            itemCount:tareas.length ,
+            itemBuilder: (context, i){
+              return  imagen_list(context, tareas, i);
+           });
+          }
+        //return Container();
+        
+      }else{
+        return CircularProgressIndicator();
+      }
+    },
+  ); 
+  //return Container();
+}       
   
   Widget  pantallaCursos(){
 
@@ -473,10 +500,11 @@ final firebaseBloc  = FirebaseBloc();
     stream: firebaseBloc.materiasStream,
     builder: (context, snapshot){
       print('---------------');
-      if(snapshot.hasData){
+      if(snapshot.data!=null){
         print(snapshot.data);
         print('curso seleccionado:$cursoSelected');
         final materias=snapshot.data[cursoSelected];
+        if(materias==null){return Container();}//Este docente aun no tiene esta materia asiganada a este curso
         print(materias);
         //cursoSelected
         return botones(materias);
@@ -554,35 +582,6 @@ final firebaseBloc  = FirebaseBloc();
     );
   }
 
-
-Widget _crearPost(BuildContext context){
-    
-    return  StreamBuilder(
-                  stream: firebaseBloc.firebaseStream,
-                  builder: (context, snapshot){
-                    
-                    if ( !snapshot.data.isEmpty ){
-                      //print(snapshot.data[1].materia);
-                      //print(snapshot.data.length);
-                      final ds= snapshot.data;
-                      
-                      if(postOrientation=='grid'){
-                         return _dibujarCuadriculasReportes(context, ds);
-                      }else if (postOrientation=='list'){
-                        
-                           return ListView.builder(
-                             itemCount:ds.length ,
-                             itemBuilder: (context, i){
-                               return  imagen_list(context, ds, i);
-                            }
-                           );
-                      }
-                    }else{
-                      return Center(child: CircularProgressIndicator());
-                    }
-                  }
-                );
-              }
                                 
 Widget _tablaDeMaterias(BuildContext context, final ds, int i){
    
@@ -605,11 +604,11 @@ tituloMateria(){
    );
  }                       
                     
-_dibujarCuadriculasReportes(BuildContext context, final ds){
+_dibujarCuadriculasReportes(BuildContext context, List<DocumentSnapshot> tareas){
 
   
   return GridView.builder(
-      itemCount: ds.length,
+      itemCount: tareas.length,
       shrinkWrap: true,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -618,17 +617,16 @@ _dibujarCuadriculasReportes(BuildContext context, final ds){
         childAspectRatio: 1.0,
       ),
       itemBuilder: (BuildContext context, int i){
-         return imagen(context, ds, i);
+         return imagen(context, tareas, i);
           },);
        }
 
-Widget imagen_list(BuildContext context, final ds, int i){
-
-  return Container(
-    height: 200.0,
+Widget imagen_list(BuildContext context, List<DocumentSnapshot> tareas, int i){
+   return Container(
+    height: 300.0,
     //width: 50.0,
     padding: EdgeInsets.all(10.0),
-    child: Card(
+    child:Card(
                 margin: EdgeInsets.symmetric(horizontal: 2.0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10.0),
@@ -637,20 +635,20 @@ Widget imagen_list(BuildContext context, final ds, int i){
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: FadeInImage(
-                  image: NetworkImage(ds[i].mediaUrl),
+                  image: NetworkImage(tareas[i].data['mediaUrl']),
                   placeholder: AssetImage('assets/cargando.gif'),
-                  //height: 70.0,
+                  height: 300.0,
                   //width: 100.0,
-                  //fit: BoxFit.cover, 
-              
-            
+                  fit: BoxFit.cover, 
           ),
          ),
-        ),
+        ), 
   );
 }
+       
+            
 
- Widget imagen(BuildContext context, final ds, int i){
+ Widget imagen(BuildContext context, List<DocumentSnapshot> tareas, int i){
       return Padding(
         padding: const EdgeInsets.all(1.0),
         child: Card(
@@ -662,18 +660,18 @@ Widget imagen_list(BuildContext context, final ds, int i){
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: FadeInImage(
-                  image: NetworkImage(ds[i].mediaUrl),
+                  image: NetworkImage(tareas[i].data['mediaUrl']),
                   placeholder: AssetImage('assets/cargando.gif'),
                   height: 70.0,
                   width: 100.0,
                   fit: BoxFit.cover, 
-              
-            
           ),
          ),
         ),
       );
     }
+              
+            
 
 
 }

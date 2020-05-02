@@ -234,6 +234,7 @@ class _HomePageState extends State<HomePage> {
   Widget crearPantallaAutenticado() {
     return Scaffold(
       body: PageView(
+       
         children: <Widget>[
          
          TimeLinePage(currentUser:currentUser),

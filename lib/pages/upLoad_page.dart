@@ -149,12 +149,14 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
         'postId'      : postId,
         'nombreDoc'   : widget.currentUser.username,
         'materia'     : 'matematicas',
+        'curso'       : 'primero', 
         'mediaUrl'    : mediaUrl,
         'descripcion' : description,
         'calificacion': '5.0',
         'revisado'    : true,
         'timestamp'   : timestamp,
-        'likes'       : {}
+        'likes'       : {},
+        
          
     }
     );
