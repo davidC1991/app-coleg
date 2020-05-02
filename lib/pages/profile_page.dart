@@ -1,4 +1,5 @@
 import 'package:app_red_social/bloc/firebase_bloc.dart';
+import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/pages/subir_tarea.dart';
@@ -46,7 +47,7 @@ class _ProfilePageState extends State<ProfilePage> {
  */
 List<Widget> publicaciones=   new List();
 
-final firebaseBloc  = FirebaseBloc();
+
 
   @override
   void initState() { 
@@ -59,26 +60,7 @@ final firebaseBloc  = FirebaseBloc();
     
         //firebaseBloc.cargarPosts();
           
-        firebaseBloc.cargandoStream.listen((a){
-        isLoading=a;
-        print ('isLoading: $isLoading');
-         });
-
-        firebaseBloc.materiaSelectedStream.listen((b){
-        
-        setState(() {
-        materiaSelected=b;
-        print ('materia seleccionada: $materiaSelected');  
-        });
-         });
-        
-        firebaseBloc.cursoSelectedStream.listen((c){
-        
-        setState(() {
-        cursoSelected=c;
-        print ('curso seleccionado: $cursoSelected');  
-        });
-         });
+       
   }
 
     
@@ -324,7 +306,7 @@ final firebaseBloc  = FirebaseBloc();
                          ),
                          SizedBox(width: 24.0,),
                          
-                         contPantalla==1?tareaButton():Container(),
+                         contPantalla==2?tareaButton():Container(),
                        ],
                      ),
                    ),
@@ -391,7 +373,28 @@ final firebaseBloc  = FirebaseBloc();
     }
       @override
       Widget build(BuildContext context) {
+        final firebaseBloc  = Provider.firebaseBloc(context);  
         
+        firebaseBloc.cargandoStream.listen((a){
+        isLoading=a;
+        print ('isLoading: $isLoading');
+         });
+
+        firebaseBloc.materiaSelectedStream.listen((b){
+        
+       // setState(() {
+        materiaSelected=b;
+        print ('materia seleccionada:::::::::::::::::: $materiaSelected');  
+       // });
+         });
+        
+        firebaseBloc.cursoSelectedStream.listen((c){
+        
+        //setState(() {
+        cursoSelected=c;
+        print ('curso seleccionado:::::::::::::: $cursoSelected');  
+        //});
+         });
         
  
 
@@ -404,7 +407,7 @@ final firebaseBloc  = FirebaseBloc();
                 
                    buildProfileHeaders(),
                    buildTogglePostOrientation(),
-                   Expanded(child: Container(child: selectorPantalla(firebaseBloc)))
+                   Expanded(child: Container(child: selectorPantalla(firebaseBloc,context)))
                
                    
                   
@@ -424,21 +427,21 @@ final firebaseBloc  = FirebaseBloc();
       }
           
 
-  Widget selectorPantalla(FirebaseBloc firebaseBloc){
+  Widget selectorPantalla(FirebaseBloc firebaseBloc, BuildContext context){
 
      switch (contPantalla) {
-         case 0 : {return pantallaCursos();}
+         case 0 : {return pantallaCursos(firebaseBloc, context);}
             break;
-         case 1 : {return pantallaMaterias();}
+         case 1 : {return pantallaMaterias( firebaseBloc, context);}
             break; 
-         case 2 : {return pantallaTareas();}
+         case 2 : {return pantallaTareas(firebaseBloc, context);}
          break;     
        }
        return Container();
       }
 
         
-  Widget  pantallaTareas(){
+  Widget  pantallaTareas(FirebaseBloc firebaseBloc,BuildContext context){
 
   firebaseBloc.cargarTareas();
 
@@ -470,7 +473,7 @@ final firebaseBloc  = FirebaseBloc();
   //return Container();
 }       
   
-  Widget  pantallaCursos(){
+  Widget  pantallaCursos(FirebaseBloc firebaseBloc,BuildContext context){
 
   
   firebaseBloc.cargarCursos();
@@ -482,7 +485,7 @@ final firebaseBloc  = FirebaseBloc();
         cursos=snapshot.data;
         print(snapshot.data);
         //return Container();
-        return botones(cursos);
+        return botones(cursos,context,firebaseBloc);
       }else{
         return CircularProgressIndicator();
       }
@@ -491,7 +494,7 @@ final firebaseBloc  = FirebaseBloc();
 
 }
   
-  Widget  pantallaMaterias( ){
+  Widget  pantallaMaterias(FirebaseBloc firebaseBloc,BuildContext context ){
 
   
   firebaseBloc.cargarMaterias();
@@ -507,7 +510,7 @@ final firebaseBloc  = FirebaseBloc();
         if(materias==null){return Container();}//Este docente aun no tiene esta materia asiganada a este curso
         print(materias);
         //cursoSelected
-        return botones(materias);
+        return botones(materias, context,firebaseBloc);
       //return Container();
       }else{
         return CircularProgressIndicator();
@@ -518,7 +521,7 @@ final firebaseBloc  = FirebaseBloc();
 }
 
  
- botones(List boton){
+ botones(List boton, BuildContext context, FirebaseBloc firebaseBloc){
     
 
   return GridView.builder(
@@ -531,13 +534,13 @@ final firebaseBloc  = FirebaseBloc();
         childAspectRatio: 1.0,
       ),
       itemBuilder: (BuildContext context, int i){
-         return _crearBotonRedondeado(Colors.blue, Icons.border_all, boton[i]);
+         return _crearBotonRedondeado(Colors.blue, Icons.border_all, boton[i],context,firebaseBloc);
         },
        );
 
   }
 
- Widget _crearBotonRedondeado(Color color, IconData icono, String texto){
+ Widget _crearBotonRedondeado(Color color, IconData icono, String texto,BuildContext context,FirebaseBloc firebaseBloc){
     return GestureDetector(
       onTap: (){
         if (contPantalla==0){   //pantalla cursos
@@ -546,14 +549,14 @@ final firebaseBloc  = FirebaseBloc();
           firebaseBloc.materiaSelectedController.sink.add(texto);
         }
           
-        
+        setState(() {
+          
+        });  
         contPantalla++;
         firebaseBloc.contPantallaController.sink.add(contPantalla);
         print('Profesor prresionó el boton : $texto');
         print('ContPantalla : $contPantalla');
-        /* setState(() {
-          
-        });  */     
+             
       },
       child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX:0.1,sigmaY: 0.0),

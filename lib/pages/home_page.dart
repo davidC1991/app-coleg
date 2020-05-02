@@ -241,7 +241,7 @@ class _HomePageState extends State<HomePage> {
          NotificatiosPage(),
          //RaisedButton(onPressed: logout,child: Text('exit ')),
          
-         UpLoadPage(currentUser:currentUser),
+         //UpLoadPage(currentUser:currentUser),
          SearchPage(),
          ProfilePage(profileId: currentUser?.id, docenteb: currentUser?.docente),
         ],
@@ -258,7 +258,7 @@ class _HomePageState extends State<HomePage> {
         //BottomNavigationBarItem(icon: Icon(Icons.close)),
         BottomNavigationBarItem(icon: Icon(Icons.whatshot)),
         BottomNavigationBarItem(icon: Icon(Icons.notifications_active)),
-        BottomNavigationBarItem(icon: Icon(Icons.photo_camera, size:37.0)),
+        //BottomNavigationBarItem(icon: Icon(Icons.photo_camera, size:37.0)),
         BottomNavigationBarItem(icon: Icon(Icons.search)),
         BottomNavigationBarItem(icon: Icon(Icons.account_circle)),
        ],

@@ -4,7 +4,7 @@ import 'package:app_red_social/provider/peticiones_firebase.dart';
 export 'package:app_red_social/provider/peticiones_firebase.dart';
 
 class FirebaseBloc{
-
+ 
   final _tareasController = new BehaviorSubject<List<DocumentSnapshot>>();
   final _materiasController = new BehaviorSubject<Map<String,Object>>();
   final _cursosController = new BehaviorSubject();
@@ -34,7 +34,7 @@ cargarTareas()async {
         
         
         materiaSelected=b;
-        print ('materia seleccionada: $materiaSelected');  
+        //print ('materia seleccionada: $materiaSelected');  
        
          });
         
@@ -42,7 +42,7 @@ cargarTareas()async {
         
         
         cursoSelected=c;
-        print ('curso seleccionado: $cursoSelected');  
+        //print ('curso seleccionado>>>>>>>>>>>>>>>>>>>>>>>>: $cursoSelected');  
         
          }); 
 

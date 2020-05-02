@@ -1,6 +1,7 @@
 
 import 'dart:io';
 import 'package:app_red_social/bloc/firebase_bloc.dart';
+import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/widgets/progress.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -26,10 +27,12 @@ class UpLoadPage extends StatefulWidget {
   _UpLoadPageState createState() => _UpLoadPageState();
 }
 
-class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMixin<UpLoadPage> {
+//class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMixin<UpLoadPage> {
+ class _UpLoadPageState extends State<UpLoadPage>  {
  TextEditingController locationController= TextEditingController(); 
  TextEditingController captionController= TextEditingController(); 
- 
+ //FirebaseBloc firebaseBloc = FirebaseBloc();
+
  File file ;
  bool isUploading= false;
  String postId= Uuid().v4();
@@ -37,6 +40,11 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
  String cursoSelected;
  String materiaSelected;
  
+ @override
+ void initState() { 
+   super.initState();
+      
+ }
  handleTakePhoto() async {
     Navigator.pop(context);
       File file = await ImagePicker.pickImage(
@@ -208,7 +216,7 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
             width: MediaQuery.of(context).size.width*0.8,
             child: Center(
               child: AspectRatio(
-                aspectRatio: 16/9 ,
+                aspectRatio: 16/9,
                 child: Container(
                   decoration: BoxDecoration(
                     image: DecorationImage(
@@ -220,38 +228,77 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
               ),
             ),
           ),
-          Padding(padding:
-             EdgeInsets.only(top:10.0)
-          ),
+          Padding(padding:EdgeInsets.only(top:10.0)),
           ListTile(
-            leading: CircleAvatar(
-              backgroundImage: CachedNetworkImageProvider(widget.currentUser.photoUrl),
-            ),
+            //leading: botonTextoTarea('Curso'),
             title: Container(
+              color: Colors.grey.withOpacity(0.2),
+              height: 30.0,
               width: 250.0,
               child: TextField(
+                controller: locationController,
+                decoration: inputD(cursoSelected),
+              ),
+            ),
+          ),
+          //Divider(),
+          ListTile(
+            //contentPadding: EdgeInsets.only(bottom:3.0),
+            //leading: botonTextoTarea('Materia'),
+            title: Container(
+              color: Colors.grey.withOpacity(0.2),
+              height: 30.0,
+              width: 250.0,
+              child: FocusScope(
+              node: FocusScopeNode(),  
+              child: TextFormField(
+                controller: locationController,
+                //textCapitalization: TextCapitalization.sentences,
+                decoration:inputD(materiaSelected),
+              ),
+             ),
+            ),
+          ),
+          //Divider(),
+          ListTile(
+            //leading: botonTextoTarea('Tema'),
+            title: Container(
+              height: 30.0,
+              width: 250.0,
+              child: TextField(
+                controller: locationController,
+                decoration:inputD('Escriba el titulo del tema')
+              ),
+            ),
+          ),
+          
+          //Divider(),
+          ListTile(
+            //leading: botonTextoTarea('Fecha'),
+            title: Container(
+              height: 30.0,
+              width: 250.0,
+              child: TextField(
+                controller: locationController,
+                decoration:inputD('Escriba la fecha limite de entrega')
+                
+              ),
+            ),
+          ),
+           ListTile(
+           /*  leading: CircleAvatar(
+              backgroundImage: CachedNetworkImageProvider(widget.currentUser.photoUrl),
+            ), */
+            title: Container(
+              width: 100.0,
+              child: TextFormField(
+                maxLines: 3,
                 controller: captionController,
-                decoration: InputDecoration(
-                  hintText: 'write a caption',
-                  border: InputBorder.none,
-                ),
+                decoration: inputD('Describa su Actividad')
               ),
             ),
           ),
           Divider(),
-          ListTile(
-            leading: Icon(Icons.pin_drop, color: Colors.orange, size: 35.0),
-            title: Container(
-              width: 250.0,
-              child: TextField(
-                controller: locationController,
-                decoration:InputDecoration(
-                  hintText: 'Localizacion de la foto?',
-                  border: InputBorder.none
-                ),
-              ),
-            ),
-          ),
           Container(
             width:  200.0,
             height:  100.0,
@@ -275,6 +322,28 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
    );
  }
 
+InputDecoration inputD(String texto){
+  return InputDecoration(
+    border: OutlineInputBorder(),
+    labelText: texto[0].toUpperCase()+texto.substring(1),
+    //hintText: texto,
+    hoverColor: Colors.red, 
+  );
+}
+Widget botonTextoTarea(String text){
+  return Container(
+    height: 30.0,
+    width: 70.0,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+            //color: Color.fromRGBO(62,66,107,0.7).withOpacity(0.2),
+            color: Colors.blue.withOpacity(1),
+            borderRadius: BorderRadius.circular(5.0)
+             ),
+    child: Text(text, style: TextStyle(color: Colors.white)),         
+  );
+}
+
  getUserLocation() async{
   Position position = await Geolocator().getCurrentPosition(
    desiredAccuracy: LocationAccuracy.high);
@@ -289,12 +358,27 @@ class _UpLoadPageState extends State<UpLoadPage> with AutomaticKeepAliveClientMi
   locationController.text= formattedAddress;
  }
 
-  bool get wantKeepAlive => true;
+  //bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
-    // final firebaseBloc  = FirebaseBloc();
-    super.build(context);
+     final firebaseBloc  = Provider.firebaseBloc(context); 
+    firebaseBloc.materiaSelectedStream.listen((b){
+        print('====================================');
+        //setState(() {
+        materiaSelected=b;
+        print ('materia seleccionada---------------->: $materiaSelected');  
+        //});
+         });
+        
+        firebaseBloc.cursoSelectedStream.listen((c){
+        
+        //setState(() {
+        cursoSelected=c;
+        print ('curso seleccionado--------------------->: $cursoSelected');  
+        //});
+         });
+    //super.build(context);
      return file == null ? buildSplashScreen() : buildUploadForm();
   }
 }

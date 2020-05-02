@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:app_red_social/bloc/firebase_bloc.dart';
+export 'package:app_red_social/bloc/firebase_bloc.dart';
 
 
 class Provider extends InheritedWidget{
