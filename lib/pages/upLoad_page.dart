@@ -13,6 +13,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image/image.dart' as Im;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 
@@ -31,6 +32,9 @@ class UpLoadPage extends StatefulWidget {
  class _UpLoadPageState extends State<UpLoadPage>  {
  TextEditingController locationController= TextEditingController(); 
  TextEditingController captionController= TextEditingController(); 
+ TextEditingController tituloTemaController= TextEditingController(); 
+ TextEditingController fechaLimiteController= TextEditingController(); 
+ TextEditingController actividadController= TextEditingController(); 
  //FirebaseBloc firebaseBloc = FirebaseBloc();
 
  File file ;
@@ -39,12 +43,25 @@ class UpLoadPage extends StatefulWidget {
  bool isLoading;
  String cursoSelected;
  String materiaSelected;
+ String usuarioId;
+ String userName;
+ bool tareaCargada=false;
  
  @override
  void initState() { 
    super.initState();
-      
+  getUserId();  
  }
+
+ getUserId()async{
+
+   SharedPreferences prefs = await SharedPreferences.getInstance();
+   usuarioId= prefs.getString('keyUsuarioId'); 
+
+   SharedPreferences prefs1 = await SharedPreferences.getInstance();
+   userName= prefs1.getString('keyUserName'); 
+ }
+
  handleTakePhoto() async {
     Navigator.pop(context);
       File file = await ImagePicker.pickImage(
@@ -96,7 +113,7 @@ class UpLoadPage extends StatefulWidget {
   Container buildSplashScreen(){
     return Container(
       //color: Colors.red,
-      color: Theme.of(context).accentColor.withOpacity(0.6),
+      color: Theme.of(context).accentColor,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -147,34 +164,41 @@ class UpLoadPage extends StatefulWidget {
    return downloadUrl;
  }
 
- createPostInFirestore({mediaUrl, location, description}){
+ createPostInFirestore({mediaUrl,tituloTema,fecha, description}){
+   
+       
     postsRef
-    .document(widget.currentUser.id)
+    .document(usuarioId)
     .collection('userPosts')
     .document(postId)
     .setData({
 
         'postId'      : postId,
-        'nombreDoc'   : widget.currentUser.username,
-        'materia'     : 'matematicas',
-        'curso'       : 'primero', 
+        'nombreDoc'   : userName,
+        'materia'     : materiaSelected,
+        'curso'       : cursoSelected, 
+        'tituloTema'  : tituloTema,
         'mediaUrl'    : mediaUrl,
         'descripcion' : description,
         'calificacion': '5.0',
         'revisado'    : true,
+        'fechaLimite' : fecha,
         'timestamp'   : timestamp,
         'likes'       : {},
         
          
     }
     );
-    captionController.clear();
+    tituloTemaController.clear();
+    fechaLimiteController.clear();
+    actividadController.clear();
     locationController.clear();
 
     setState(() {
       file=null;
       isUploading=false;
       postId= Uuid().v4();
+      Navigator.pop(context);
     });
  }
 
@@ -186,8 +210,9 @@ class UpLoadPage extends StatefulWidget {
     String mediaUrl = await uploadImage(file);
     createPostInFirestore(
       mediaUrl: mediaUrl,
-      location: locationController.text,
-      description: captionController.text,
+      tituloTema: tituloTemaController.text,
+      fecha: fechaLimiteController.text,
+      description: actividadController.text,
     );
     }
 
@@ -236,7 +261,7 @@ class UpLoadPage extends StatefulWidget {
               height: 30.0,
               width: 250.0,
               child: TextField(
-                controller: locationController,
+                //controller: locationController,
                 decoration: inputD(cursoSelected),
               ),
             ),
@@ -252,7 +277,7 @@ class UpLoadPage extends StatefulWidget {
               child: FocusScope(
               node: FocusScopeNode(),  
               child: TextFormField(
-                controller: locationController,
+                //controller: locationController,
                 //textCapitalization: TextCapitalization.sentences,
                 decoration:inputD(materiaSelected),
               ),
@@ -266,7 +291,7 @@ class UpLoadPage extends StatefulWidget {
               height: 30.0,
               width: 250.0,
               child: TextField(
-                controller: locationController,
+                controller: tituloTemaController,
                 decoration:inputD('Escriba el titulo del tema')
               ),
             ),
@@ -279,7 +304,7 @@ class UpLoadPage extends StatefulWidget {
               height: 30.0,
               width: 250.0,
               child: TextField(
-                controller: locationController,
+                controller: fechaLimiteController,
                 decoration:inputD('Escriba la fecha limite de entrega')
                 
               ),
@@ -293,7 +318,7 @@ class UpLoadPage extends StatefulWidget {
               width: 100.0,
               child: TextFormField(
                 maxLines: 3,
-                controller: captionController,
+                controller: actividadController,
                 decoration: inputD('Describa su Actividad')
               ),
             ),
@@ -330,6 +355,7 @@ InputDecoration inputD(String texto){
     hoverColor: Colors.red, 
   );
 }
+
 Widget botonTextoTarea(String text){
   return Container(
     height: 30.0,

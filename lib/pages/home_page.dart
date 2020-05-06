@@ -16,6 +16,7 @@ import 'Notifications_page.dart';
 final GoogleSignIn googleSignIn = GoogleSignIn();
 final StorageReference storageRef = FirebaseStorage.instance.ref();
 final usersRef=Firestore.instance.collection('users');
+final adminRef=Firestore.instance.collection('admin');
 final docenteRef=Firestore.instance.collection('docente');
 final postsRef=Firestore.instance.collection('posts');
 final followersRef=Firestore.instance.collection('followers');
@@ -30,6 +31,8 @@ User currentUser;
 String username;
 int cont_auth=0;
 bool docente=false;
+String curso='primero';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
@@ -79,12 +82,17 @@ class _HomePageState extends State<HomePage> {
   controladorSignIn(GoogleSignInAccount account)async{
        if(account != null){
       print('usuario ingresó con la cuentas: ${account.email}');
-      if (account.email == 'callejas.david29@gmail.com' || account.email == 'm.jcacll@gmail.com'){
+      if (account.email == 'callejas.david29@gmail.com'){
         print('Usted es un profesor ---------');
         docente=true;
-        await createUser_admin();
-      }else {
+        await createUser_docente();
+      }else if(account.email == 'm.jcacll@gmail.com'){
+        print('Usted es un administrador');
         docente=false;
+        createUser_admin();
+      }
+      else {
+      docente=false;
       print('===============||===============');
       print('cont_aut:$cont_auth');
       
@@ -101,7 +109,7 @@ class _HomePageState extends State<HomePage> {
       }
   }
 
-    createUserInFirestore() async{
+createUserInFirestore() async{
        //chequear que el la coleccion de usuario existe en db
        
        final GoogleSignInAccount user = googleSignIn.currentUser;
@@ -130,9 +138,12 @@ class _HomePageState extends State<HomePage> {
           'displayName': user.displayName,
           'bio': '',
           'timestamp': timestamp,
-          'docente': false
+          'docente': false,
+          'curso'  : curso,
+          'admin'  : false
 
         });
+        //'[matematicas, geografia, naturales, castellano]'
        //make new user their own follower (to include their posts in their timeline)
          await followersRef  
           .document(user.id)
@@ -148,17 +159,78 @@ class _HomePageState extends State<HomePage> {
        currentUser = User.fromDocument(doc);
        print(currentUser);
        print(currentUser.username);
+       print('administrador: ${currentUser.docente}');
+        
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('keyUsuarioId', currentUser.id);
+      SharedPreferences prefs1 = await SharedPreferences.getInstance();
+      await prefs1.setString('keyUserName', currentUser.displayName);
+     }
+
+    createUser_docente() async{
+       //chequear que el la coleccion de usuario existe en db
+       
+       final GoogleSignInAccount user = googleSignIn.currentUser;
+       DocumentSnapshot doc = await docenteRef.document(user.id).get();
+       //print('doc: ${user.}');
+       if(!doc.exists){
+       //si el usuario no exite crear un a cuenta
+      print('cont_aut:$cont_auth');
+      print('==========================');
+      if (cont_auth<2){
+        cont_auth=2;
+        print(':::::::::::::::::::');
+          username = await Navigator.push(context, MaterialPageRoute(
+          builder: (context)=> CreateAccount()));
+     //     print('ya ingreso el dato---------------------->');
+      } 
+
+        
+          print('username:-------------->! $username');
+       //conseguir el username para crear un nuevo docuemento de usuario en db
+        docenteRef.document(user.id).setData({
+          'id': user.id,
+          'username': username,
+          'photoUrl': user.photoUrl,
+          'email': user.email,
+          'displayName': user.displayName,
+          'bio': '',
+          'timestamp': timestamp,
+          'docente': false,
+          'curso'  : curso,
+          'materias': ['matematicas','sociales'],
+          'admin'  : false
+
+        });
+        //'[matematicas, geografia, naturales, castellano]'
+       //make new user their own follower (to include their posts in their timeline)
+         await followersRef  
+          .document(user.id)
+          .collection('userFollowers')
+          .document(user.id).
+          setData({}); 
+        //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
+        //las otras paginas
+
+        doc = await docenteRef.document(user.id).get();
+       }
+       
+       currentUser = User.fromDocument(doc);
+       print(currentUser);
+       print(currentUser.username);
         print('docente: ${currentUser.docente}');
         
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('keyUsuarioId', currentUser.id);
+      SharedPreferences prefs1 = await SharedPreferences.getInstance();
+      await prefs1.setString('keyUserName', currentUser.displayName);
      }
 
 
     createUser_admin() async {
           //chequear que el la coleccion de usuario existe en db
        final GoogleSignInAccount user = googleSignIn.currentUser;
-       DocumentSnapshot doc = await docenteRef.document(user.id).get();
+       DocumentSnapshot doc = await adminRef.document(user.id).get();
        //print('doc: ${account}');
        if(!doc.exists){
        //si el usuario no exite crear un a cuenta
@@ -169,7 +241,7 @@ class _HomePageState extends State<HomePage> {
           print('username:--------------! $username');
       }
        //conseguir el username para crear un nuevo docuemento de usuario en db
-        docenteRef.document(user.id).setData({
+        adminRef.document(user.id).setData({
           'id': user.id,
           'username': username,
           'photoUrl': user.photoUrl,
@@ -177,7 +249,8 @@ class _HomePageState extends State<HomePage> {
           'displayName': user.displayName,
           'bio': '',
           'timestamp': timestamp,
-          'docente': true
+          'docente': false,
+          'admin'  : true
 
         });
        //make new user their own follower (to include their posts in their timeline)
@@ -189,7 +262,7 @@ class _HomePageState extends State<HomePage> {
         //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
         //las otras paginas
 
-        doc = await docenteRef.document(user.id).get();
+        doc = await adminRef.document(user.id).get();
        }
        
        currentUser = User.fromDocument(doc);
@@ -198,6 +271,9 @@ class _HomePageState extends State<HomePage> {
        print('docente: ${currentUser.docente}');
        SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('keyUsuarioId', currentUser.id);
+
+      SharedPreferences prefs1 = await SharedPreferences.getInstance();
+      await prefs1.setString('keyUserName', currentUser.displayName);
      }
 
  @override
@@ -237,13 +313,13 @@ class _HomePageState extends State<HomePage> {
        
         children: <Widget>[
          
-         TimeLinePage(currentUser:currentUser),
+         //TimeLinePage(currentUser:currentUser),
          NotificatiosPage(),
          //RaisedButton(onPressed: logout,child: Text('exit ')),
          
          //UpLoadPage(currentUser:currentUser),
          SearchPage(),
-         ProfilePage(profileId: currentUser?.id, docenteb: currentUser?.docente),
+         ProfilePage(profileId: currentUser?.id, docenteb: currentUser?.docente, admin: currentUser?.admin),
         ],
         controller: pageController,
         onPageChanged: cuandoPaginaCambie,
@@ -256,7 +332,7 @@ class _HomePageState extends State<HomePage> {
        //inactiveColor: Colors.blueGrey,
        items: [
         //BottomNavigationBarItem(icon: Icon(Icons.close)),
-        BottomNavigationBarItem(icon: Icon(Icons.whatshot)),
+        //BottomNavigationBarItem(icon: Icon(Icons.whatshot)),
         BottomNavigationBarItem(icon: Icon(Icons.notifications_active)),
         //BottomNavigationBarItem(icon: Icon(Icons.photo_camera, size:37.0)),
         BottomNavigationBarItem(icon: Icon(Icons.search)),

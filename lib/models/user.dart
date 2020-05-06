@@ -12,6 +12,7 @@ class User {
     final bio;
     final timestamp;
     final docente;
+    final admin;
 
     User({
         this.id,
@@ -22,6 +23,7 @@ class User {
         this.bio,
         this.timestamp,
         this.docente,
+        this.admin
     });
 
     factory User.fromDocument(DocumentSnapshot doc) {
@@ -34,6 +36,7 @@ class User {
         bio         : doc["bio"],
         timestamp   : doc["timestamp"],
         docente     : doc['docente'],
+        admin       : doc['admin']
         );
     }
 

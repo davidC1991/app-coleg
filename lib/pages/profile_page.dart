@@ -3,6 +3,7 @@ import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/pages/subir_tarea.dart';
+import 'package:app_red_social/pages/tarea_page.dart';
 import 'package:app_red_social/pages/upLoad_page.dart';
 //import 'package:app_red_social/widgets/botones_cursos.dart';
 import 'package:app_red_social/widgets/botones_materias.dart';
@@ -18,11 +19,17 @@ import 'dart:ui';
 
 import 'package:flutter/scheduler.dart';
 
+
+String materiaSelected;
+String idTarea;
+int contPantalla=0;
+
 class ProfilePage extends StatefulWidget {
   String profileId ;
   bool docenteb ;
+  bool admin;
   
-  ProfilePage ({ this.profileId, this.docenteb});
+  ProfilePage ({ this.profileId, this.docenteb, this.admin});
  
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -33,10 +40,11 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isFollowing = false;
   final String currentUserId= currentUser?.id;
   String postOrientation= 'grid';
+  bool vistaTareaElegida=false;
   bool isLoading= false;
-  String materiaSelected;
+  
   String cursoSelected;
-  int contPantalla=0;
+  
   List<String> cursos= List();
   List<Widget> lista= List();
   List<DocumentSnapshot> tareas = new List();
@@ -57,13 +65,20 @@ List<Widget> publicaciones=   new List();
     getFollowers();
     getFollowing();
     checkIfFollowing(); */
-    
+    getAlumnoId();
         //firebaseBloc.cargarPosts();
-          
-       
+         
   }
 
-    
+    getAlumnoId(){
+     if(widget.docenteb==false && widget.admin==false){
+      print('eres un alumno');
+      contPantalla=3;
+    }else if (widget.docenteb==false && widget.admin==true){
+      print('eres un administrador');
+      contPantalla=5;
+    }   
+    }
    
       Column buildCountColumn(String label, int count){
         return Column(
@@ -88,6 +103,7 @@ List<Widget> publicaciones=   new List();
           ],
         );
       }
+    
       editProfile(){
         Navigator.push(context, MaterialPageRoute(builder: 
         (context)=> EditProfile(currentUserId : currentUserId, docenteb: widget.docenteb)));
@@ -122,6 +138,7 @@ List<Widget> publicaciones=   new List();
           ),
         );
       }
+     
       FlatButton tareaButton(){
         return FlatButton(
           onPressed: ()=>  Navigator.pushNamed(context, 'foto'),
@@ -237,7 +254,7 @@ List<Widget> publicaciones=   new List();
     
       buildProfileHeaders(){
         return FutureBuilder(
-          future: widget.docenteb?docenteRef.document(widget.profileId).get():usersRef.document(widget.profileId).get(),
+          future: widget.docenteb?docenteRef.document(widget.profileId).get():widget.admin?adminRef.document(widget.profileId).get():usersRef.document(widget.profileId).get(),
           builder: (context, snapshot){
              if(!snapshot.hasData){
                return circularProgress(context);
@@ -353,6 +370,7 @@ List<Widget> publicaciones=   new List();
           IconButton(
             onPressed:() { 
               setPostOrientation('grid');
+             
               //setState(() {});
               },
             icon: Icon(Icons.grid_on),
@@ -371,20 +389,23 @@ List<Widget> publicaciones=   new List();
         ],
       );
     }
+
+//------------------------Scaffold---------------------------------------------
+
       @override
       Widget build(BuildContext context) {
         final firebaseBloc  = Provider.firebaseBloc(context);  
         
         firebaseBloc.cargandoStream.listen((a){
         isLoading=a;
-        print ('isLoading: $isLoading');
+       // print ('isLoading: $isLoading');
          });
 
         firebaseBloc.materiaSelectedStream.listen((b){
         
        // setState(() {
         materiaSelected=b;
-        print ('materia seleccionada:::::::::::::::::: $materiaSelected');  
+       // print ('materia seleccionada:::::::::::::::::: $materiaSelected');  
        // });
          });
         
@@ -392,37 +413,36 @@ List<Widget> publicaciones=   new List();
         
         //setState(() {
         cursoSelected=c;
-        print ('curso seleccionado:::::::::::::: $cursoSelected');  
+       // print ('curso seleccionado:::::::::::::: $cursoSelected');  
         //});
          });
-        
+        print('contPantalla: $contPantalla');
  
-
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
           body: Column(
                 children: <Widget>[
-
-
-                
-                   buildProfileHeaders(),
-                   buildTogglePostOrientation(),
-                   Expanded(child: Container(child: selectorPantalla(firebaseBloc,context)))
-               
-                   
-                  
-                   
-                
-               
-               // pantallaCursos(),
-               // SingleChildScrollView(child: botonesMaterias()),
-                //botonesMaterias()
-                //tituloMateria(),
-                //Expanded(child: _crearPost(context, firebaseBloc)),
-                         
+                buildProfileHeaders(),
+                buildTogglePostOrientation(),
+                Expanded(child: Container(child: selectorPantalla(firebaseBloc,context)))
               ],
-          
-          )          
+          ),
+            floatingActionButton:  contPantalla==1||contPantalla==2||contPantalla==4?FloatingActionButton(
+                      onPressed:(){
+                         switch (contPantalla) {
+                           case 0 : {}
+                              break;
+                           case 1 : {contPantalla=0; setState(() {});}
+                              break; 
+                           case 2 : {contPantalla=1; setState(() {});}
+                            break;
+                           case 4 : {contPantalla=3; setState(() {});}
+                            break;  
+                        }
+                      },
+                      backgroundColor: Colors.blueAccent,
+                      child: Icon(Icons.arrow_back), 
+                    ):null         
         );
       }
           
@@ -435,32 +455,88 @@ List<Widget> publicaciones=   new List();
          case 1 : {return pantallaMaterias( firebaseBloc, context);}
             break; 
          case 2 : {return pantallaTareas(firebaseBloc, context);}
-         break;     
+            break;
+         case 3 : {return pantallaMaterias(firebaseBloc, context);}
+            break; 
+         case 4 : {return pantallaTareas(firebaseBloc, context);}
+            break;
+         case 5 : {return pantallaAdmin(firebaseBloc, context);}
+            break;           
        }
        return Container();
       }
 
-        
+  Widget pantallaAdmin(FirebaseBloc firebaseBloc, BuildContext context){
+    return Container(
+      child: Center(child: Text('admin......')),
+    );
+  }      
   Widget  pantallaTareas(FirebaseBloc firebaseBloc,BuildContext context){
+    
+    if(contPantalla==2){
+      firebaseBloc.cargarTareas();
+      return streamBuilderTareasDocente(firebaseBloc, context);
+    }else if(contPantalla==4){
+      firebaseBloc.cargarTareaAlumno();
+      return streamBuilderTareasDocente(firebaseBloc, context);
+      //return streamBuilderTareasAlumnos(firebaseBloc, context);
+    }
+      
+    
+  return Container();
+} 
 
-  firebaseBloc.cargarTareas();
-
+streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
+  
    return StreamBuilder<List<DocumentSnapshot>>(
     stream: firebaseBloc.tareasStream,
     builder: (context, snapshot){
       if(snapshot.hasData){
        //tareas.clear();
        tareas =snapshot.data;
-        print(tareas);
+       //print(tareas[0].data['mediaUrl']);
 
-        if(postOrientation=='grid'){
-             return _dibujarCuadriculasReportes(context, tareas);
+         if(postOrientation=='grid'){
+         
+             return _dibujarCuadriculasReportes(context, tareas, firebaseBloc);
           }else if (postOrientation=='list'){
+            
             return ListView.builder(
             shrinkWrap: true,
             itemCount:tareas.length ,
             itemBuilder: (context, i){
-              return  imagen_list(context, tareas, i);
+              return  imagen_list(context, tareas, i, firebaseBloc);
+           });
+          } 
+        //return Container();
+        
+      }else{
+        return CircularProgressIndicator();
+      }
+    },
+  ); 
+}
+
+streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
+  
+   return StreamBuilder<List<DocumentSnapshot>>(
+    stream: firebaseBloc.tareasStream,
+    builder: (context, snapshot){
+      if(snapshot.hasData){
+       //tareas.clear();
+       tareas =snapshot.data;
+       // print(tareas);
+
+        if(postOrientation=='grid'){
+         
+             return _dibujarCuadriculasReportes(context, tareas, firebaseBloc);
+          }else if (postOrientation=='list'){
+            
+            return ListView.builder(
+            shrinkWrap: true,
+            itemCount:tareas.length ,
+            itemBuilder: (context, i){
+              return  imagen_list(context, tareas, i, firebaseBloc);
            });
           }
         //return Container();
@@ -470,8 +546,7 @@ List<Widget> publicaciones=   new List();
       }
     },
   ); 
-  //return Container();
-}       
+}
   
   Widget  pantallaCursos(FirebaseBloc firebaseBloc,BuildContext context){
 
@@ -495,11 +570,19 @@ List<Widget> publicaciones=   new List();
 }
   
   Widget  pantallaMaterias(FirebaseBloc firebaseBloc,BuildContext context ){
+ 
+  if (contPantalla==1){
+      firebaseBloc.cargarMaterias();
+      return streamBuilderDocentesMaterias(firebaseBloc, context);
+    }else if(contPantalla==3){
+      print('----');
+      firebaseBloc.cargarMateriasAlumons();
+      return streamBuilderAlumnosMaterias(firebaseBloc, context);
+    }
+  }
 
-  
-  firebaseBloc.cargarMaterias();
-
-  return StreamBuilder <Map<String,Object>>(
+ streamBuilderDocentesMaterias(FirebaseBloc firebaseBloc,BuildContext context){
+   return StreamBuilder<Map<String,Object>>(
     stream: firebaseBloc.materiasStream,
     builder: (context, snapshot){
       print('---------------');
@@ -517,11 +600,30 @@ List<Widget> publicaciones=   new List();
       }
     },
   );
+ }
 
-}
-
+ streamBuilderAlumnosMaterias(FirebaseBloc firebaseBloc,BuildContext context){
+   return StreamBuilder<List<String>>(
+    stream: firebaseBloc.materiasAlumnosStream,
+    builder: (context, snapshot){
+      print('---------------');
+      if(snapshot.data!=null){
+      
+        //print(snapshot.data);
+        final materias=snapshot.data;
+        if(materias==null){return Container();}//Este alumno aun no tiene esta materia 
+        print(materias);
+        //return Container();
+        return botones(materias, context,firebaseBloc);
+      //return Container();
+      }else{
+        return CircularProgressIndicator();
+      }
+    },
+  );
+ }
  
- botones(List boton, BuildContext context, FirebaseBloc firebaseBloc){
+  botones(List boton, BuildContext context, FirebaseBloc firebaseBloc){
     
 
   return GridView.builder(
@@ -540,12 +642,14 @@ List<Widget> publicaciones=   new List();
 
   }
 
- Widget _crearBotonRedondeado(Color color, IconData icono, String texto,BuildContext context,FirebaseBloc firebaseBloc){
+  Widget _crearBotonRedondeado(Color color, IconData icono, String texto,BuildContext context,FirebaseBloc firebaseBloc){
     return GestureDetector(
       onTap: (){
         if (contPantalla==0){   //pantalla cursos
           firebaseBloc.cursoSelectedController.sink.add(texto);
         }else if(contPantalla==1){
+          firebaseBloc.materiaSelectedController.sink.add(texto);
+        }else if(contPantalla==3){
           firebaseBloc.materiaSelectedController.sink.add(texto);
         }
           
@@ -586,18 +690,15 @@ List<Widget> publicaciones=   new List();
   }
 
                                 
-Widget _tablaDeMaterias(BuildContext context, final ds, int i){
-   
-
-  
-  return Column(
+  Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+   return Column(
     children: <Widget>[
-     _dibujarCuadriculasReportes(context, ds),
+     _dibujarCuadriculasReportes(context, ds, firebaseBloc),
    ],
   );
 }                      
                        
-tituloMateria(){
+  tituloMateria(){
                        
    return Container(
      height: 30.0,
@@ -607,7 +708,7 @@ tituloMateria(){
    );
  }                       
                     
-_dibujarCuadriculasReportes(BuildContext context, List<DocumentSnapshot> tareas){
+  _dibujarCuadriculasReportes(BuildContext context, List<DocumentSnapshot> tareas, FirebaseBloc firebaseBloc){
 
   
   return GridView.builder(
@@ -620,56 +721,79 @@ _dibujarCuadriculasReportes(BuildContext context, List<DocumentSnapshot> tareas)
         childAspectRatio: 1.0,
       ),
       itemBuilder: (BuildContext context, int i){
-         return imagen(context, tareas, i);
+         return imagen(context, tareas, i, firebaseBloc);
           },);
        }
 
-Widget imagen_list(BuildContext context, List<DocumentSnapshot> tareas, int i){
+  Widget imagen_list(BuildContext context, List<DocumentSnapshot> tareas, int i, FirebaseBloc firebaseBloc){
+   
    return Container(
     height: 300.0,
     //width: 50.0,
     padding: EdgeInsets.all(10.0),
-    child:Card(
-                margin: EdgeInsets.symmetric(horizontal: 2.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-            //    child: Image.network(product.documents[i].data['mediaUrl'])
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: FadeInImage(
-                  image: NetworkImage(tareas[i].data['mediaUrl']),
-                  placeholder: AssetImage('assets/cargando.gif'),
-                  height: 300.0,
-                  //width: 100.0,
-                  fit: BoxFit.cover, 
+    child: GestureDetector(
+      onTap: (){
+          //firebaseBloc.listaTareaElegidaController.sink.add(false);
+          vistaTareaElegida=false;
+          idTarea=tareas[i].data['postId'];
+          Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TareaPage(tareas: tareas, tarea: tareas[i],vistaTareaElegida:vistaTareaElegida)));
+          },
+      child: Card(
+                  margin: EdgeInsets.symmetric(horizontal: 2.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+              //    child: Image.network(product.documents[i].data['mediaUrl'])
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: FadeInImage(
+                    image: NetworkImage(tareas[i].data['mediaUrl']),
+                    placeholder: AssetImage('assets/cargando.gif'),
+                    height: 300.0,
+                    //width: 100.0,
+                    fit: BoxFit.cover, 
+            ),
+           ),
           ),
-         ),
-        ), 
+    ), 
   );
 }
        
             
 
- Widget imagen(BuildContext context, List<DocumentSnapshot> tareas, int i){
+  Widget imagen(BuildContext context, List<DocumentSnapshot> tareas, int i, FirebaseBloc firebaseBloc){
+   
       return Padding(
         padding: const EdgeInsets.all(1.0),
-        child: Card(
-                margin: EdgeInsets.symmetric(horizontal: 2.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-            //    child: Image.network(product.documents[i].data['mediaUrl'])
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: FadeInImage(
-                  image: NetworkImage(tareas[i].data['mediaUrl']),
-                  placeholder: AssetImage('assets/cargando.gif'),
-                  height: 70.0,
-                  width: 100.0,
-                  fit: BoxFit.cover, 
+        child: GestureDetector(
+          onTap: (){
+          //firebaseBloc.listaTareaElegidaController.sink.add(true);
+          idTarea=tareas[i].data['postId'];
+          vistaTareaElegida=true;
+          Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => TareaPage(tareas: tareas, tarea: tareas[i],vistaTareaElegida:vistaTareaElegida)));
+          },
+          //Navigator.pushNamed(context, 'tareaPage', tarea: tareas[i]),
+          child: Card(
+                  margin: EdgeInsets.symmetric(horizontal: 2.0),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+              //    child: Image.network(product.documents[i].data['mediaUrl'])
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: FadeInImage(
+                    image: NetworkImage(tareas[i].data['mediaUrl']),
+                    placeholder: AssetImage('assets/cargando.gif'),
+                    height: 70.0,
+                    width: 100.0,
+                    fit: BoxFit.cover, 
+            ),
+           ),
           ),
-         ),
         ),
       );
     }

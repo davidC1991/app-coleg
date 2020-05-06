@@ -6,29 +6,56 @@ export 'package:app_red_social/provider/peticiones_firebase.dart';
 class FirebaseBloc{
  
   final _tareasController = new BehaviorSubject<List<DocumentSnapshot>>();
+  final _tareasAlumnoController = new BehaviorSubject<List<String>>();
+  final _comentariosController = new BehaviorSubject<List<DocumentSnapshot>>();
   final _materiasController = new BehaviorSubject<Map<String,Object>>();
   final _cursosController = new BehaviorSubject();
-  //final _articulosCarritoController = new BehaviorSubject();
+  final listaTareaElegidaController = new BehaviorSubject<bool>();
   final _cargandoController   = new BehaviorSubject<bool>();
   final contPantallaController   = new BehaviorSubject<int>();
   final materiaSelectedController   = new BehaviorSubject<String>();
   final cursoSelectedController   = new BehaviorSubject<String>();
+   final _materiasAlumonsController   = new BehaviorSubject<List<String>>();
   String materiaSelected;
   String cursoSelected;
-   List<DocumentSnapshot> todasTareas = new List();
+  List<DocumentSnapshot> todasTareas = new List();
   final _datosProvider   = new DatosProvider();
 
 
+  Stream<List<DocumentSnapshot>> get comentariosStream => _comentariosController;
   Stream<List<DocumentSnapshot>> get tareasStream => _tareasController;
+  Stream<List<String>> get tareasAlumnoStream => _tareasAlumnoController;
   Stream <Map<String,Object>>get materiasStream => _materiasController;
   Stream get cursosStream => _cursosController;
   Stream<bool> get cargandoStream => _cargandoController;
+  Stream<bool> get listaTareaElegidaStream => listaTareaElegidaController;
   Stream<int> get contPantallaStream => contPantallaController;
   Stream<String> get materiaSelectedStream => materiaSelectedController;
   Stream<String> get cursoSelectedStream => cursoSelectedController;
+  Stream<List<String>> get materiasAlumnosStream => _materiasAlumonsController;
+
+cargarTareaAlumno()async{
+   _cargandoController.sink.add(true);
+  final tareaAlumno= await _datosProvider.getTareasAlumnos();
+     //print(tareaAlumno);
+     _tareasController.sink.add(tareaAlumno);
+     _cargandoController.sink.add(false);
+}
+
+cargarMateriasAlumons()async{
+  final materiasAlumnos= await _datosProvider.getMateriasAlumnos(); 
+  _materiasAlumonsController.sink.add(materiasAlumnos);
+}
+cargarComentarios()async {
+ 
+  final comentarios= await _datosProvider.getComentarios();
+  //print(comentarios);
+  _comentariosController.sink.add(comentarios);
+  
+}
 
 cargarTareas()async {
-        print('trayendo lo que el docente anteriormente presionó');
+       // print('trayendo lo que el docente anteriormente presionó');
        //---------------Escuchando lo que el docente presiona-----------------------------------------
        materiaSelectedStream.listen((b){
         
@@ -70,15 +97,6 @@ cargarTareas()async {
      _cargandoController.sink.add(false);
   }
         
-      
-     
-     
-     
-     
-
-
-
-
  cargarMaterias()async {
     //_cargandoController.sink.add(true);
      final materias= await _datosProvider.getCursosMaterias();
@@ -98,6 +116,8 @@ cargarTareas()async {
 
 
  dispose(){
+    _comentariosController?.close();
+    listaTareaElegidaController?.close();
     _tareasController?.close();
     _cargandoController?.close();
     _materiasController?.close();
@@ -105,6 +125,8 @@ cargarTareas()async {
      materiaSelectedController?.close();
      cursoSelectedController?.close();
      contPantallaController?.close();
+    _materiasAlumonsController?.close();
+    _tareasAlumnoController?.close();
     //_articulosCarritoController?.close();
   }
 
