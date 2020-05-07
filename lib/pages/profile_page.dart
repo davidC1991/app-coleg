@@ -2,22 +2,19 @@ import 'package:app_red_social/bloc/firebase_bloc.dart';
 import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
-import 'package:app_red_social/pages/subir_tarea.dart';
 import 'package:app_red_social/pages/tarea_page.dart';
-import 'package:app_red_social/pages/upLoad_page.dart';
 //import 'package:app_red_social/widgets/botones_cursos.dart';
-import 'package:app_red_social/widgets/botones_materias.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:app_red_social/widgets/progress.dart';
 import 'package:app_red_social/widgets/header.dart';
 import 'package:app_red_social/models/user.dart';
-
+import 'package:expansion_tile_card/expansion_tile_card.dart';
 
 import 'dart:ui';
 
-import 'package:flutter/scheduler.dart';
+
+import 'package:flutter_swiper/flutter_swiper.dart';
 
 
 String materiaSelected;
@@ -28,15 +25,21 @@ class ProfilePage extends StatefulWidget {
   String profileId ;
   bool docenteb ;
   bool admin;
+  String username;
   
-  ProfilePage ({ this.profileId, this.docenteb, this.admin});
+  ProfilePage ({ this.profileId, this.docenteb, this.admin, this.username});
  
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  
+  TextEditingController nombreController = TextEditingController();
+  TextEditingController cursoController = TextEditingController();
+  TextEditingController materiaController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController contrasenhaController = TextEditingController();
+
   bool isFollowing = false;
   final String currentUserId= currentUser?.id;
   String postOrientation= 'grid';
@@ -44,16 +47,35 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isLoading= false;
   
   String cursoSelected;
-  
+  String a='-';
   List<String> cursos= List();
   List<Widget> lista= List();
   List<DocumentSnapshot> tareas = new List();
+  bool checkBoxPrimero=false;
+  bool checkBoxSegundo=false;
+ bool checkBoxTercero=false;
+ bool checkBoxCuarto=false;
+ bool checkBoxQuinto=false;
+ bool checkBoxKinder=false;
+ bool checkBoxPrekinder=false;
+ bool checkBoxTransicion=false;
+ bool checkBox=false;
+ 
+  bool checkBoxMatematicas=false;
+  bool checkBoxCastellano=false;
+  bool checkBoxNaturales=false;
+  bool checkBoxEscritura=false;
+  bool checkBoxIngles=false;
+  bool checkBoxLectura=false;
+  bool checkBoxGeografia=false;
+  bool checkBoxHistoria=false;
+ 
 
- /*  int postCount=0;
-  int followerCount=0;
-  int followingCount=0; 
- */
-List<Widget> publicaciones=   new List();
+  List cursoss= ['prekinder','kinder','Transicion','primero','segundo','terecero','cuarto','quinto'];
+  List materiass= ['matematicas','castellano','naturales','escritura','ingles','lectura','geografia','historia'];
+  Map<String,String> materiasYcursosSelected= new Map();
+  List<String>materiasSelected=new List();
+  List<String>cursosSelected=new List();
 
 
 
@@ -269,7 +291,8 @@ List<Widget> publicaciones=   new List();
                        CircleAvatar(
                          radius: 40.0,
                          backgroundColor: Colors.grey,
-                         backgroundImage: CachedNetworkImageProvider(user.photoUrl),
+                         child: Text(widget.username[0].toUpperCase()),
+                         //backgroundImage: CachedNetworkImageProvider(user.photoUrl),
                        ),
                       Expanded(
                         flex: 1,
@@ -353,8 +376,7 @@ List<Widget> publicaciones=   new List();
           },
         );
       }
-      
-       
+            
  
     setPostOrientation(String postOrientation){
       print('orientacion: $postOrientation');
@@ -417,7 +439,7 @@ List<Widget> publicaciones=   new List();
         //});
          });
         print('contPantalla: $contPantalla');
- 
+       
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
           body: Column(
@@ -461,16 +483,422 @@ List<Widget> publicaciones=   new List();
          case 4 : {return pantallaTareas(firebaseBloc, context);}
             break;
          case 5 : {return pantallaAdmin(firebaseBloc, context);}
-            break;           
+            break;
+         case 6 : {return firebaseBloc.actorSelectedController.value=='Crear Docente'?pantallaAgregarDocente(firebaseBloc, context)
+                          :pantallaAgregarAlumno(firebaseBloc, context);}
+            break;               
        }
        return Container();
       }
 
+  pantallaAgregarDocente(FirebaseBloc firebaseBloc, BuildContext context){
+    
+    
+    return SingleChildScrollView(
+      child: Column(
+            children: <Widget>[
+
+               ExpansionTileCard(
+                leading: CircleAvatar(child: Text('curso')),
+                title: Text('Eliga el curso que desea asignar'),
+                subtitle: Text('presione para ver mas'),
+                children: <Widget>[
+                   /* Divider(
+                    thickness: 1.0,
+                    height: 1.0,
+                  ), */
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child:Container(
+                        child: Column(
+                          children: <Widget>[
+                            seleccionCurso(cursoss,context),
+                            
+                          ],
+                        ),
+                      ),
+                      )),
+                ],
+
+                ),   
+              ExpansionTileCard(
+                leading: CircleAvatar(child: Text('Materias')),
+                title: Text('Eliga la materia que desea asignar'),
+                subtitle: Text('presione para ver mas'),
+                children: <Widget>[
+                   
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
+                      child:Container(
+                        child: Column(
+                          children: <Widget>[
+                            seleccionMateria(materiass,context),
+                            
+                          ],
+                        ),
+                      ),
+                      )),
+                ],
+
+                ),
+              ListTile(
+                //leading: botonTextoTarea('Tema'),
+                title: Container(
+                  height: 30.0,
+                  width: 250.0,
+                  child: TextField(
+                    controller: nombreController,
+                    decoration:inputD('Escriba el nombre completo del docente')
+                  ),
+                ),
+              ),
+              
+              ListTile(
+                //leading: botonTextoTarea('Tema'),
+                title: Container(
+                  height: 30.0,
+                  width: 250.0,
+                  child: TextField(
+                    controller: cursoController,
+                    decoration:inputD('Cursos asignados')
+                  ),
+                ),
+              ),
+              ListTile(
+                //leading: botonTextoTarea('Tema'),
+                title: Container(
+                  height: 30.0,
+                  width: 250.0,
+                  child: TextField(
+                    controller: materiaController,
+                    decoration:inputD('Materias asignadas')
+                  ),
+                ),
+              ),
+              ListTile(
+                //leading: botonTextoTarea('Tema'),
+                title: Container(
+                  height: 30.0,
+                  width: 250.0,
+                  child: TextField(
+                    controller: emailController,
+                    decoration:inputD('Escriba el email de ingreso')
+                  ),
+                ),
+              ),
+              ListTile(
+                //leading: botonTextoTarea('Tema'),
+                title: Container(
+                  height: 30.0,
+                  width: 250.0,
+                  child: TextField(
+                    controller: contrasenhaController,
+                    decoration:inputD('Escriba la contraseña de ingreso')
+                  ),
+                ),
+              ),
+              botonEnviar(),
+            ],
+          
+      ),
+    );
+  }
+  botonEnviar(){
+    return FlatButton(
+          onPressed: ()=>  enviarRegistro(),
+          child: Container(
+            width: 200.0,
+            height: 27.0,
+            child: Text(
+              'Guardar',
+              style: TextStyle(
+                color: isFollowing ? Colors.black : Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isFollowing ? Colors.white : Colors.blue,
+              border: Border.all(
+                color: isFollowing ? Colors.grey : Colors.blue,
+              ),
+              borderRadius: BorderRadius.circular(5.0),
+            ),
+          ),
+         
+        );
+  }
+enviarRegistro()async{
+    materiasYcursosSelected=
+}
+ Widget seleccionCurso(List cursos, BuildContext context){
+   
+    return SingleChildScrollView(
+     // physics: ScrollPhysics(),
+      child: ListView.builder(
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: cursos.length,
+            itemBuilder: (BuildContext context, int i){
+              
+              return SingleChildScrollView(
+                child: ListTile(
+                  leading: CircleAvatar(child: Text(cursos[i].toString()[0].toUpperCase()),backgroundColor: Colors.red.withOpacity(0.5),),
+                  title: Text(cursos[i]),
+                  trailing: Checkbox(
+                  onChanged:(bool value) {
+                        print(value);
+                           switch (i) {
+                             case 0 : {
+                               checkBoxPrekinder=value;
+                                  if(value){
+                                   cursosSelected.add(cursos[i]);
+                                   //print(cursosSelected);
+                                    }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break;
+                             case 1 : {
+                               checkBoxKinder=value;
+                                 if(value){
+                                   cursosSelected.add(cursos[i]);
+                                 }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break; 
+                             case 2 : {
+                               checkBoxTransicion=value;
+                                 if(value){
+                                   cursosSelected.add(cursos[i]);
+                                 }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break;
+                             case 3 : {
+                               checkBoxPrimero=value;
+                                if(value){
+                                   cursosSelected.add(cursos[i]);
+                                  
+                                 }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break; 
+                             case 4 : {
+                               checkBoxSegundo=value;
+                                 if(value){
+                                   cursosSelected.add(cursos[i]);
+                                 }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break;
+                             case 5 : {
+                               checkBoxTercero=value;
+                                 if(value){
+                                   cursosSelected.add(cursos[i]);
+                                 }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break;
+                             case 6 : {
+                               checkBoxCuarto =value;
+                                 if(value){
+                                   cursosSelected.add(cursos[i]);
+                                 }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break;               
+                             case 7 : {
+                               checkBoxQuinto =value;
+                                 if(value){
+                                   cursosSelected.add(cursos[i]);
+                                 }else{cursosSelected.remove(cursos[i]);} 
+                               }
+                                break;   
+                            }
+                       
+                       var kontan = StringBuffer();
+                           cursosSelected.forEach((item){
+                           kontan.write('$item-');   
+                         });
+                         a=kontan.toString();
+                         cursoController.text=a;
+                         print(a);     
+                         setState((){ });
+                       //
+                      },
+
+                      value: i==0?checkBoxPrekinder
+                            :i==1?checkBoxKinder
+                            :i==2?checkBoxTransicion
+                            :i==3?checkBoxPrimero
+                            :i==4?checkBoxSegundo
+                            :i==5?checkBoxTercero
+                            :i==6?checkBoxCuarto
+                            :i==7?checkBoxQuinto
+                            :null,
+                    ),
+                  ),
+                );
+               }
+             ),
+           ); 
+          }
+              
+        
+   
+ Widget seleccionMateria(List materias, BuildContext context){
+   
+    return SingleChildScrollView(
+     // physics: ScrollPhysics(),
+      child: ListView.builder(
+            physics: NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: materias.length,
+            itemBuilder: (BuildContext context, int i){
+              
+              return SingleChildScrollView(
+                child: ListTile(
+                  leading: CircleAvatar(child: Text(materias[i].toString()[0].toUpperCase()),backgroundColor: Colors.red.withOpacity(0.5),),
+                  title: Text(materias[i]),
+                  trailing: Checkbox(
+                  onChanged:(bool value) {
+                  
+                        print(value);
+                           switch (i) {
+                             case 0 : {
+                               checkBoxMatematicas=value;
+                               if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break;
+                             case 1 : {
+                               checkBoxCastellano=value;
+                                if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break; 
+                             case 2 : {
+                               checkBoxNaturales=value;
+                                if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break;
+                             case 3 : {
+                               checkBoxEscritura=value;
+                                if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break; 
+                             case 4 : {
+                               checkBoxIngles=value;
+                                if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break;
+                             case 5 : {
+                               checkBoxLectura=value;
+                                if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break;
+                             case 6 : {
+                               checkBoxGeografia=value;
+                                if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break;               
+                             case 7 : {
+                               checkBoxHistoria =value;
+                                if(value){
+                                   materiasSelected.add(materias[i]);
+                                   //print(cursosSelected);
+                                    }else{materiasSelected.remove(materias[i]);}
+                               }
+                                break;   
+                            }
+                       
+                       var kontan1 = StringBuffer();
+                           materiasSelected.forEach((item){
+                           kontan1.write('$item-');   
+                         });
+                         a=kontan1.toString();
+                         materiaController.text=a;
+                         //print(a);           
+                       setState((){ });
+                      },
+
+                      value: i==0?checkBoxMatematicas
+                            :i==1?checkBoxCastellano
+                            :i==2?checkBoxNaturales
+                            :i==3?checkBoxEscritura
+                            :i==4?checkBoxIngles
+                            :i==5?checkBoxLectura
+                            :i==6?checkBoxGeografia
+                            :i==7?checkBoxHistoria
+                            :null,
+                    ),
+                  ),
+                );
+               }
+              ),
+            ); 
+           }
+                 
+        
+    
+                
+    
+    
+  InputDecoration inputD(String texto){
+  return InputDecoration(
+    border: OutlineInputBorder(),
+    labelText: texto[0].toUpperCase()+texto.substring(1),
+    //hintText: texto,
+    hoverColor: Colors.red, 
+  );
+}
+
+   pantallaAgregarAlumno(FirebaseBloc firebaseBloc, BuildContext context){
+    return Container(child: Text(firebaseBloc.actorSelectedController.value));
+  }
+
   Widget pantallaAdmin(FirebaseBloc firebaseBloc, BuildContext context){
+    List actores= ['Crear Docente','Crear Alumno'];
+    List colores=[Colors.brown.shade300, Colors.red.shade300];
     return Container(
-      child: Center(child: Text('admin......')),
+      height: 200.0,
+      width: double.infinity,
+      child: Swiper(
+        layout: SwiperLayout.STACK,
+        itemWidth: 300.0,
+        itemHeight: 300.0,
+        itemBuilder: (BuildContext context , int i){
+          return _crearBotonRedondeado(colores[i], Icons.border_all, actores[i], context, firebaseBloc); 
+        },
+        itemCount: 2,
+        pagination: new SwiperPagination(),
+        //control: new SwiperControl(),
+      ),
     );
   }      
+
   Widget  pantallaTareas(FirebaseBloc firebaseBloc,BuildContext context){
     
     if(contPantalla==2){
@@ -651,6 +1079,8 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
           firebaseBloc.materiaSelectedController.sink.add(texto);
         }else if(contPantalla==3){
           firebaseBloc.materiaSelectedController.sink.add(texto);
+        }else if(contPantalla==5){
+          firebaseBloc.actorSelectedController.sink.add(texto);
         }
           
         setState(() {
@@ -658,7 +1088,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
         });  
         contPantalla++;
         firebaseBloc.contPantallaController.sink.add(contPantalla);
-        print('Profesor prresionó el boton : $texto');
+        //print('Profesor prresionó el boton : $texto');
         print('ContPantalla : $contPantalla');
              
       },
@@ -669,7 +1099,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
           margin: EdgeInsets.all(10.0),
           decoration: BoxDecoration(
             //color: Color.fromRGBO(62,66,107,0.7).withOpacity(0.2),
-            color: Colors.blue.withOpacity(0.1),
+            color: contPantalla==5?Colors.teal.shade600:Colors.blue.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20.0)
              ),
            child: Column(
@@ -678,10 +1108,10 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
                 CircleAvatar(
                   backgroundColor:color,
                   radius: 35.0,
-                  child: Icon(icono, color: Colors.white, size: 30.0),
+                  child: Icon(icono, color: Colors.white, size: 50.0),
                 ),
-              Text(texto, style: TextStyle(color: Colors.black)),  
-              
+              Text(texto, style: TextStyle(color: Colors.white,fontSize:22.0, fontWeight: FontWeight.bold)),  
+          
              ],
            ),  
         ),

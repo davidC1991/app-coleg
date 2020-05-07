@@ -139,7 +139,7 @@ getFollowing() async{
                
           for (var i = 0; i < b.data['cursoInd'].length; i++) {
             if(b.data['cursoInd'][i]!=null && b.data['curso'][b.data['cursoInd'][i]]!=null){
-           materiasYcursos[b.data['cursoInd'][i]]=b.data['curso'][b.data['cursoInd'][i]];
+               materiasYcursos[b.data['cursoInd'][i]]=b.data['curso'][b.data['cursoInd'][i]];
             }
           }
           print('--|--');

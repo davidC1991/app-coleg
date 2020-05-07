@@ -34,6 +34,11 @@ bool docente=false;
 String curso='primero';
 
 class HomePage extends StatefulWidget {
+  String email;
+  String id;
+  String nombre;
+
+  HomePage({this.email,this.id,this.nombre});
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -51,7 +56,7 @@ class _HomePageState extends State<HomePage> {
     pageController = PageController(
       //initialPage: 2
     );
-    googleSignIn.isSignedIn().then((onValue){
+   /*  googleSignIn.isSignedIn().then((onValue){
       print('onvalue=$onValue');
       if (onValue==true){
         cont_auth++;
@@ -77,16 +82,17 @@ class _HomePageState extends State<HomePage> {
         }).catchError((err){
         print('Error al ingresar: $err');
       });
-
+ */
+    validarUsuario();
   }
-  controladorSignIn(GoogleSignInAccount account)async{
-       if(account != null){
-      print('usuario ingresó con la cuentas: ${account.email}');
-      if (account.email == 'callejas.david29@gmail.com'){
+  validarUsuario()async{
+    
+      print('usuario ingresó con la cuentas: ${widget.email}');
+      if (widget.email == 'david.callejasc@hotmail.es'){
         print('Usted es un profesor ---------');
         docente=true;
         await createUser_docente();
-      }else if(account.email == 'm.jcacll@gmail.com'){
+      }else if(widget.email == 'test@test.com'){
         print('Usted es un administrador');
         docente=false;
         createUser_admin();
@@ -102,40 +108,36 @@ class _HomePageState extends State<HomePage> {
       setState(() {
           isAuth= true;
         });
-      }else{
-        setState(() {
-          isAuth=false;
-        });
-      }
+     
   }
 
 createUserInFirestore() async{
        //chequear que el la coleccion de usuario existe en db
        
-       final GoogleSignInAccount user = googleSignIn.currentUser;
-       DocumentSnapshot doc = await usersRef.document(user.id).get();
+       //final GoogleSignInAccount user = googleSignIn.currentUser;
+       DocumentSnapshot doc = await usersRef.document(widget.id).get();
        //print('doc: ${user.}');
        if(!doc.exists){
        //si el usuario no exite crear un a cuenta
       print('cont_aut:$cont_auth');
       print('==========================');
-      if (cont_auth<2){
+      //if (cont_auth<2){
         cont_auth=2;
         print(':::::::::::::::::::');
           username = await Navigator.push(context, MaterialPageRoute(
           builder: (context)=> CreateAccount()));
      //     print('ya ingreso el dato---------------------->');
-      } 
+      //} 
 
         
           print('username:-------------->! $username');
        //conseguir el username para crear un nuevo docuemento de usuario en db
-        usersRef.document(user.id).setData({
-          'id': user.id,
+        usersRef.document(widget.id).setData({
+          'id': widget.id,
           'username': username,
-          'photoUrl': user.photoUrl,
-          'email': user.email,
-          'displayName': user.displayName,
+          'photoUrl': '',
+          'email': widget.email,
+          'displayName': widget.nombre,
           'bio': '',
           'timestamp': timestamp,
           'docente': false,
@@ -145,15 +147,15 @@ createUserInFirestore() async{
         });
         //'[matematicas, geografia, naturales, castellano]'
        //make new user their own follower (to include their posts in their timeline)
-         await followersRef  
-          .document(user.id)
+         /* await followersRef  
+          .document(u.id)
           .collection('userFollowers')
           .document(user.id).
-          setData({}); 
+          setData({}); */ 
         //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
         //las otras paginas
 
-        doc = await usersRef.document(user.id).get();
+        doc = await usersRef.document(widget.id).get();
        }
        
        currentUser = User.fromDocument(doc);
@@ -170,49 +172,48 @@ createUserInFirestore() async{
     createUser_docente() async{
        //chequear que el la coleccion de usuario existe en db
        
-       final GoogleSignInAccount user = googleSignIn.currentUser;
-       DocumentSnapshot doc = await docenteRef.document(user.id).get();
+       //final GoogleSignInAccount user = googleSignIn.currentUser;
+       DocumentSnapshot doc = await docenteRef.document(widget.id).get();
        //print('doc: ${user.}');
        if(!doc.exists){
        //si el usuario no exite crear un a cuenta
       print('cont_aut:$cont_auth');
       print('==========================');
-      if (cont_auth<2){
-        cont_auth=2;
+      //if (cont_auth<2){
+        //cont_auth=2;
         print(':::::::::::::::::::');
-          username = await Navigator.push(context, MaterialPageRoute(
-          builder: (context)=> CreateAccount()));
+        username = await Navigator.push(context, MaterialPageRoute(
+        builder: (context)=> CreateAccount()));
      //     print('ya ingreso el dato---------------------->');
-      } 
+      //} 
 
         
           print('username:-------------->! $username');
        //conseguir el username para crear un nuevo docuemento de usuario en db
-        docenteRef.document(user.id).setData({
-          'id': user.id,
+        docenteRef.document(widget.id).setData({
+          'id': widget.id,
           'username': username,
-          'photoUrl': user.photoUrl,
-          'email': user.email,
-          'displayName': user.displayName,
+          'photoUrl': '',
+          'email': widget.email,
+          'displayName': widget.nombre,
           'bio': '',
           'timestamp': timestamp,
           'docente': false,
-          'curso'  : curso,
           'materias': ['matematicas','sociales'],
           'admin'  : false
 
         });
         //'[matematicas, geografia, naturales, castellano]'
        //make new user their own follower (to include their posts in their timeline)
-         await followersRef  
+        /*  await followersRef  
           .document(user.id)
           .collection('userFollowers')
           .document(user.id).
           setData({}); 
-        //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
+         *///volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
         //las otras paginas
 
-        doc = await docenteRef.document(user.id).get();
+        doc = await docenteRef.document(widget.id).get();
        }
        
        currentUser = User.fromDocument(doc);
@@ -229,24 +230,24 @@ createUserInFirestore() async{
 
     createUser_admin() async {
           //chequear que el la coleccion de usuario existe en db
-       final GoogleSignInAccount user = googleSignIn.currentUser;
-       DocumentSnapshot doc = await adminRef.document(user.id).get();
+       //final GoogleSignInAccount user = googleSignIn.currentUser;
+       DocumentSnapshot doc = await adminRef.document(widget.id).get();
        //print('doc: ${account}');
        if(!doc.exists){
        //si el usuario no exite crear un a cuenta
-      if (cont_auth<2){
-        cont_auth=2;
+      //if (cont_auth<2){
+       // cont_auth=2;
          username = await Navigator.push(context, MaterialPageRoute(
           builder: (context)=> CreateAccount()));
           print('username:--------------! $username');
-      }
+      //}
        //conseguir el username para crear un nuevo docuemento de usuario en db
-        adminRef.document(user.id).setData({
-          'id': user.id,
+        adminRef.document(widget.id).setData({
+          'id': widget.id,
           'username': username,
-          'photoUrl': user.photoUrl,
-          'email': user.email,
-          'displayName': user.displayName,
+          'photoUrl': '',
+          'email': widget.email,
+          'displayName': widget.nombre,
           'bio': '',
           'timestamp': timestamp,
           'docente': false,
@@ -262,7 +263,7 @@ createUserInFirestore() async{
         //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
         //las otras paginas
 
-        doc = await adminRef.document(user.id).get();
+        doc = await adminRef.document(widget.id).get();
        }
        
        currentUser = User.fromDocument(doc);
@@ -310,7 +311,8 @@ createUserInFirestore() async{
   Widget crearPantallaAutenticado() {
     return Scaffold(
       body: PageView(
-       
+        //pageSnapping: false,
+        physics: NeverScrollableScrollPhysics(),
         children: <Widget>[
          
          //TimeLinePage(currentUser:currentUser),
@@ -319,7 +321,7 @@ createUserInFirestore() async{
          
          //UpLoadPage(currentUser:currentUser),
          SearchPage(),
-         ProfilePage(profileId: currentUser?.id, docenteb: currentUser?.docente, admin: currentUser?.admin),
+         ProfilePage(profileId: currentUser?.id, docenteb: currentUser?.docente, admin: currentUser?.admin, username:currentUser?.username),
         ],
         controller: pageController,
         onPageChanged: cuandoPaginaCambie,
@@ -392,7 +394,7 @@ createUserInFirestore() async{
 
   @override
   Widget build(BuildContext context) {
-    return isAuth ? crearPantallaAutenticado() : crearPantallaInicioSesion();
+    return crearPantallaAutenticado();
   }
 }
 

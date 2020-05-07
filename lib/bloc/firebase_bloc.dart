@@ -15,13 +15,17 @@ class FirebaseBloc{
   final contPantallaController   = new BehaviorSubject<int>();
   final materiaSelectedController   = new BehaviorSubject<String>();
   final cursoSelectedController   = new BehaviorSubject<String>();
-   final _materiasAlumonsController   = new BehaviorSubject<List<String>>();
+  final _materiasAlumonsController   = new BehaviorSubject<List<String>>();
+  final actorSelectedController   = new BehaviorSubject<String>();
+  
+
+
   String materiaSelected;
   String cursoSelected;
   List<DocumentSnapshot> todasTareas = new List();
   final _datosProvider   = new DatosProvider();
 
-
+  Stream<String> get actorSelectedStream => actorSelectedController;
   Stream<List<DocumentSnapshot>> get comentariosStream => _comentariosController;
   Stream<List<DocumentSnapshot>> get tareasStream => _tareasController;
   Stream<List<String>> get tareasAlumnoStream => _tareasAlumnoController;
@@ -116,6 +120,7 @@ cargarTareas()async {
 
 
  dispose(){
+    actorSelectedController?.close();
     _comentariosController?.close();
     listaTareaElegidaController?.close();
     _tareasController?.close();

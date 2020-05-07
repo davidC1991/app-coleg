@@ -39,6 +39,8 @@ dependencies:
   timeago:
   shared_preferences: ^0.5.7
   rxdart: ^0.23.1
+  expansion_tile_card: ^1.0.3
+  
   
   
   #simple_permissions: ^0.1.9
