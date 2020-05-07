@@ -10,7 +10,7 @@ import 'package:app_red_social/widgets/progress.dart';
 import 'package:app_red_social/widgets/header.dart';
 import 'package:app_red_social/models/user.dart';
 import 'package:expansion_tile_card/expansion_tile_card.dart';
-
+import 'package:uuid/uuid.dart';
 import 'dart:ui';
 
 
@@ -73,10 +73,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   List cursoss= ['prekinder','kinder','Transicion','primero','segundo','terecero','cuarto','quinto'];
   List materiass= ['matematicas','castellano','naturales','escritura','ingles','lectura','geografia','historia'];
-  Map<String,String> materiasYcursosSelected= new Map();
+  Map<String,List<String>> materiasYcursosSelected= new Map();
   List<String>materiasSelected=new List();
-  List<String>cursosSelected=new List();
-
+  String cursosSelected;
+  String miembroId= Uuid().v4();
 
 
   @override
@@ -639,8 +639,31 @@ class _ProfilePageState extends State<ProfilePage> {
         );
   }
 enviarRegistro()async{
-    materiasYcursosSelected=
+  materiasYcursosSelected.addAll({cursosSelected:materiasSelected});
+  print(materiasYcursosSelected);
+  docenteRef.document(miembroId).setData({
+          'id': miembroId,
+          'email': emailController.text,
+          'displayName': nombreController.text,
+          'timestamp': DateTime.now(),
+          'docente': true,
+          'cursoInd': cursosSelected,
+          'curso': materiasYcursosSelected,
+          'admin'  : false,
+          'contrasena': contrasenhaController.text
+
+        });
+
+    emailController.clear();
+    nombreController.clear();
+    cursoController.clear();
+    materiaController.clear(); 
+    contrasenhaController.clear();    
 }
+
+    
+
+
  Widget seleccionCurso(List cursos, BuildContext context){
    
     return SingleChildScrollView(
@@ -661,71 +684,67 @@ enviarRegistro()async{
                            switch (i) {
                              case 0 : {
                                checkBoxPrekinder=value;
-                                  if(value){
-                                   cursosSelected.add(cursos[i]);
-                                   //print(cursosSelected);
-                                    }else{cursosSelected.remove(cursos[i]);} 
+                               if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
+                                
                                }
                                 break;
                              case 1 : {
                                checkBoxKinder=value;
-                                 if(value){
-                                   cursosSelected.add(cursos[i]);
-                                 }else{cursosSelected.remove(cursos[i]);} 
+                               if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
+                                
                                }
                                 break; 
                              case 2 : {
                                checkBoxTransicion=value;
-                                 if(value){
-                                   cursosSelected.add(cursos[i]);
-                                 }else{cursosSelected.remove(cursos[i]);} 
+                               if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
                                }
                                 break;
                              case 3 : {
                                checkBoxPrimero=value;
-                                if(value){
-                                   cursosSelected.add(cursos[i]);
-                                  
-                                 }else{cursosSelected.remove(cursos[i]);} 
+                               if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
                                }
                                 break; 
                              case 4 : {
                                checkBoxSegundo=value;
-                                 if(value){
-                                   cursosSelected.add(cursos[i]);
-                                 }else{cursosSelected.remove(cursos[i]);} 
+                              if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
                                }
                                 break;
                              case 5 : {
                                checkBoxTercero=value;
-                                 if(value){
-                                   cursosSelected.add(cursos[i]);
-                                 }else{cursosSelected.remove(cursos[i]);} 
+                               if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
                                }
                                 break;
                              case 6 : {
                                checkBoxCuarto =value;
-                                 if(value){
-                                   cursosSelected.add(cursos[i]);
-                                 }else{cursosSelected.remove(cursos[i]);} 
+                               if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
                                }
                                 break;               
                              case 7 : {
                                checkBoxQuinto =value;
-                                 if(value){
-                                   cursosSelected.add(cursos[i]);
-                                 }else{cursosSelected.remove(cursos[i]);} 
+                               if (value){
+                                 cursosSelected= cursos[i];
+                               }else{cursosSelected='';}
                                }
                                 break;   
                             }
                        
-                       var kontan = StringBuffer();
-                           cursosSelected.forEach((item){
-                           kontan.write('$item-');   
-                         });
-                         a=kontan.toString();
-                         cursoController.text=a;
-                         print(a);     
+                           
+                         cursoController.text=cursosSelected;
+                         print(cursosSelected);
                          setState((){ });
                        //
                       },
