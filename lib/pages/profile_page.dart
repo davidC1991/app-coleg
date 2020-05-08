@@ -444,7 +444,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Expanded(child: Container(child: selectorPantalla(firebaseBloc,context, bloc)))
               ],
           ),
-            floatingActionButton:  contPantalla==1||contPantalla==2||contPantalla==4?FloatingActionButton(
+            floatingActionButton:  contPantalla==1||contPantalla==2||contPantalla==4||contPantalla==6?FloatingActionButton(
                       onPressed:(){
                          switch (contPantalla) {
                            case 0 : {}
@@ -454,7 +454,11 @@ class _ProfilePageState extends State<ProfilePage> {
                            case 2 : {contPantalla=1; setState(() {});}
                             break;
                            case 4 : {contPantalla=3; setState(() {});}
-                            break;  
+                            break;
+                           case 6 : {
+                             contPantalla=5; }
+                             limpiarFormularios();
+                            break;   
                         }
                       },
                       backgroundColor: Colors.blueAccent,
@@ -479,7 +483,7 @@ class _ProfilePageState extends State<ProfilePage> {
             break;
          case 5 : {return pantallaAdmin(firebaseBloc, context);}
             break;
-         case 6 : {return firebaseBloc.actorSelectedController.value=='Crear Docente'?pantallaAgregarDocente(firebaseBloc, context,bloc)
+         case 6 : {return firebaseBloc.actorSelectedController.value=='Crear Docente'?pantallaAgregarDatos(firebaseBloc, context,bloc)
                          :firebaseBloc.actorSelectedController.value=='Crear Alumno'?pantallaAgregarAlumno(firebaseBloc, context,bloc)
                          :firebaseBloc.actorSelectedController.value=='Actualizar Docente'?pantallaActualizarDocente(firebaseBloc, context,bloc):null;
                         // firebaseBloc.actorSelectedController.value=='Actualizar Alumno'?pantallaActualizarAlumno(firebaseBloc, context,bloc)
@@ -494,10 +498,12 @@ class _ProfilePageState extends State<ProfilePage> {
      String dato;
      emailDocente=emailController.text;
      print('-->$emailDocente');
-     dato=await nuevoDocente.registrarCorreo(context, bloc, emailController.text, '123456');
+     dato=await nuevoDocente.consultarCorreo(context, bloc, emailController.text, '123456');
      print(dato);
-
-     if(dato!='EMAIL_EXISTS'){
+      if(dato==null){
+      dato='valido';
+    } 
+     if(dato=='EMAIL_NOT_FOUND'){
        mostrarAlerta(context, 'Este correo no esta asociado a ningun docente');
      }else{
        //visibilidadC1=false;
@@ -573,7 +579,7 @@ class _ProfilePageState extends State<ProfilePage> {
      ):Container(
           child: ListView(
             children: <Widget>[
-              pantallaAgregarDocente(firebaseBloc, context, bloc),
+              pantallaAgregarDatos(firebaseBloc, context, bloc),
             ],
           ),
         );
@@ -582,7 +588,7 @@ class _ProfilePageState extends State<ProfilePage> {
             //------------------------------------------------------------------------------------------------ 
    }
   
-  pantallaAgregarDocente(FirebaseBloc firebaseBloc, BuildContext context,LoginBloc bloc){
+  pantallaAgregarDatos(FirebaseBloc firebaseBloc, BuildContext context,LoginBloc bloc){
     
     
     return SingleChildScrollView(
@@ -590,7 +596,7 @@ class _ProfilePageState extends State<ProfilePage> {
             children: <Widget>[
 
                ExpansionTileCard(
-                leading: CircleAvatar(child: Text('curso')),
+                //leading: CircleAvatar(child: Text('curso')),
                 title: Text('Eliga el curso que desea asignar'),
                 subtitle: Text('presione para ver mas'),
                 children: <Widget>[
@@ -618,8 +624,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 ),   
               ExpansionTileCard(
-                leading: CircleAvatar(child: Text('Materias')),
-                title: Text('Eliga la materia que desea asignar'),
+                //leading: CircleAvatar(child: Text('Materias')),
+                title: Text('Seleccione las materia que desea asignar'),
                 subtitle: Text('presione para ver mas'),
                 children: <Widget>[
                    
@@ -642,14 +648,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
 
                 ),
-              firebaseBloc.actorSelectedController.value=='Crear Docente'?ListTile(
+              firebaseBloc.actorSelectedController.value=='Crear Docente'||firebaseBloc.actorSelectedController.value=='Crear Alumno'?ListTile(
                 //leading: botonTextoTarea('Tema'),
                 title: Container(
                   height: 30.0,
                   width: 250.0,
                   child: TextField(
                     controller: nombreController,
-                    decoration:inputD('Escriba el nombre completo del docente')
+                    decoration:firebaseBloc.actorSelectedController.value=='Crear Alumno'?inputD('Escriba el nombre completo del alumno'):inputD('Escriba el nombre completo del docente')
                   ),
                 ),
               ):Container(),
@@ -661,7 +667,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   width: 250.0,
                   child: TextField(
                     controller: cursoController,
-                    decoration:inputD('Cursos asignados')
+                    decoration:firebaseBloc.actorSelectedController.value=='Crear Alumno'?inputD('Curso asignado'):inputD('Cursos asignados')
                   ),
                 ),
               ),
@@ -676,7 +682,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              firebaseBloc.actorSelectedController.value=='Crear Docente'?ListTile(
+              firebaseBloc.actorSelectedController.value=='Crear Docente'||firebaseBloc.actorSelectedController.value=='Crear Alumno'?ListTile(
                 //leading: botonTextoTarea('Tema'),
                 title: Container(
                   height: 30.0,
@@ -688,7 +694,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ):Container(),
 
-              firebaseBloc.actorSelectedController.value=='Crear Docente'?ListTile(
+              firebaseBloc.actorSelectedController.value=='Crear Docente'||firebaseBloc.actorSelectedController.value=='Crear Alumno'?ListTile(
                 //leading: botonTextoTarea('Tema'),
                 title: Container(
                   height: 30.0,
@@ -715,7 +721,7 @@ class _ProfilePageState extends State<ProfilePage> {
             print('emailDocente:$emailDocente');
             print('contrasenhaController.text:${contrasenhaController.text}');
             
-            if((firebaseBloc.actorSelectedController.value=='Crear Docente'
+            if(((firebaseBloc.actorSelectedController.value=='Crear Docente'||firebaseBloc.actorSelectedController.value=='Crear Alumno')
               &&materiasYcursosSelected.isNotEmpty==true
               &&cursosSelected.isNotEmpty==true
               &&emailController.text.isNotEmpty==true
@@ -733,6 +739,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                                                                                                                    emailController.text.toLowerCase(),
                                                                                                                                    contrasenhaController.text,
                                                                                                                                    nombreController.text.toLowerCase())
+               :firebaseBloc.actorSelectedController.value=='Crear Alumno'?mensajeRegistroDocente=await nuevoDocente.crearAlumno(context,
+                                                                                                                                   bloc,
+                                                                                                                                   materiasYcursosSelected,
+                                                                                                                                   cursosSelected,
+                                                                                                                                   materiasSelected,
+                                                                                                                                   emailController.text.toLowerCase(),
+                                                                                                                                   contrasenhaController.text,
+                                                                                                                                   nombreController.text.toLowerCase())                                                                                                                     
                                                                          :mensajeRegistroDocente=await nuevoDocente.actualizarRegistroDocente(context,
                                                                                                                                    bloc,
                                                                                                                                    materiasYcursosSelected,
@@ -740,6 +754,22 @@ class _ProfilePageState extends State<ProfilePage> {
                                                                                                                                    materiasSelected,
                                                                                                                                    emailController.text.toLowerCase());
               print(mensajeRegistroDocente);
+                            
+               if(mensajeRegistroDocente.contains('EMAIL_EXISTS')||mensajeRegistroDocente.contains('INVALID_EMAIL')||mensajeRegistroDocente.contains('WEAK_PASSWORD')){}
+               else{
+                 mostrarAlerta(context, 'Registro exitoso');
+                 limpiarFormularios(); 
+               
+                 }                    
+            }else{
+              print('algun campo vacio');
+               mostrarAlerta(context, 'Llene todos los campos');
+            }
+           
+  }
+ 
+
+ limpiarFormularios(){
               emailController.clear();
               nombreController.clear();
               cursoController.clear();
@@ -764,17 +794,15 @@ class _ProfilePageState extends State<ProfilePage> {
                checkBoxHistoria=false;
                materiasYcursosSelected.clear();
                cursosSelected='';  
-               materiasSelected.clear();   
-               mostrarAlerta(context, 'Registro exitoso');                    
-               visibilidadC2=true;
-               setState(() {});
-            }else{
-              print('algun campo vacio');
-               mostrarAlerta(context, 'Llene todos los campos');
-            }
-           
-  }
- 
+               materiasSelected.clear();
+              
+                 contPantalla=5;
+                 visibilidadC2=true;
+                 setState(() {});
+              
+ }              
+               
+               
   botonEnviar(FirebaseBloc firebaseBloc,BuildContext context, LoginBloc bloc){
     
     return FlatButton(
@@ -1037,7 +1065,9 @@ class _ProfilePageState extends State<ProfilePage> {
 }
 
    pantallaAgregarAlumno(FirebaseBloc firebaseBloc, BuildContext context,LoginBloc bloc){
-    return Container(child: Text(firebaseBloc.actorSelectedController.value));
+    return Container(
+      child:pantallaAgregarDatos(firebaseBloc, context, bloc)
+     );
   }
 
   Widget pantallaAdmin(FirebaseBloc firebaseBloc, BuildContext context){

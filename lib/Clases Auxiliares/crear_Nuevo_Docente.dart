@@ -23,12 +23,25 @@ class NuevoDocente{
          dato=await registrarCorreo(context, bloc,email,password);
          //print('......');
          print('---->$dato'); 
-    if(dato!='EMAIL_EXISTS'){    
-          print('documento existe');
-          
-          docenteRef.document(Uuid().v4()).setData({
+    if(dato==null){
+      dato='valido';
+    }
+    print('-----------------------');
+ 
+     if(dato.contains('EMAIL_EXISTS')||dato.contains('INVALID_EMAIL')||dato.contains('WEAK_PASSWORD')){    
+         // print('documento existe');
+           if(dato.contains('INVALID_EMAIL')){
+            mostrarAlerta(context, 'Este correo es invalido');
+            }else if (dato.contains('WEAK_PASSWORD')){
+            mostrarAlerta(context, 'La contraseña debe ser minimo 6 caracteres');
+            } else{mostrarAlerta(context, 'Este correo ya esta agregado a un usuario');} 
+     }else{
+     docenteRef.document(Uuid().v4()).setData({
           'id': Uuid().v4(),
           'email': email,
+          'bio': '',
+          'username': '',
+          'photoUrl':'',
           'displayName': nombre,
           'timestamp': DateTime.now(),
           'docente': true,
@@ -38,23 +51,36 @@ class NuevoDocente{
           'contrasena': password
 
         }); 
-      
+       }
      
     
-     }else{
-       mostrarAlerta(context, 'Este correo ya esta agregado a un usuario');
-      }
 
     return dato;
 }
 
-    
+
+Future consultarCorreo(BuildContext context, LoginBloc bloc, String email, String password)async{
+   String dato;
+   final info = await usuarioProvider.login(email, password);
+      
+         if (info['ok']){
+          print('correo registrado correctamente');
+            //return info['ok'];  
+           }else{
+           mostrarAlerta(context, info['mensaje']);
+            
+             return info['mensaje'];
+              //print(dato);
+            }
+          
+            }    
 Future registrarCorreo(BuildContext context, LoginBloc bloc, String email, String password)async{
    String dato;
    final info = await usuarioProvider.nuevoUsuario(email, password);
       
          if (info['ok']){
           print('correo registrado correctamente');
+            //return info['ok'];  
            }else{
            //mostrarAlerta(context, info['mensaje']);
             
@@ -111,13 +137,63 @@ Future registrarCorreo(BuildContext context, LoginBloc bloc, String email, Strin
       
      
     
-/*      }else{
-       mostrarAlerta(context, 'Este correo ya esta agregado a un usuario');
-      }
 
-    return dato; */
+    return ''; 
 }           
+
+
+Future crearAlumno(BuildContext context, LoginBloc bloc,Map<String,List<String>> materiasYcursosSelected,String cursosSelected,List<String>materiasSelected, String email, String password,String nombre)async{
+  String dato;
+   print('creando datos de alumno');
+  
+  
+
+  //QuerySnapshot doc = await docenteRef.getDocuments();
+  //bool validadorDocente= doc.documents[0].data.toString().contains(emailController.text); 
+
+       //print('doc: ${account}');
+        //if(validadorDocente){
+ 
+         dato=await registrarCorreo(context, bloc,email,password);
+         //print('......');
+         print('---->$dato'); 
+    if(dato==null){
+      dato='valido';
+    }
+    print('-----------------------');
+     if(dato.contains('EMAIL_EXISTS')||dato.contains('INVALID_EMAIL')||dato.contains('WEAK_PASSWORD')){    
+         // print('documento existe');
+           if(dato.contains('INVALID_EMAIL')){
+            mostrarAlerta(context, 'Este correo es invalido');
+            }else if (dato.contains('WEAK_PASSWORD')){
+            mostrarAlerta(context, 'La contraseña debe ser minimo 6 caracteres');
+            } else{mostrarAlerta(context, 'Este correo ya esta agregado a un usuario');}
+     }else{
+     print('guardando alumno....');  
+     usersRef.document(Uuid().v4()).setData({
+          'id': Uuid().v4(),
+          'bio': '',
+          'username': '',
+          'photoUrl':'',
+          'email': email,
+          'displayName': nombre,
+          'timestamp': DateTime.now(),
+          'docente': false,
+          'curso': cursosSelected,
+          'materias': materiasSelected,
+          'admin'  : false,
+          'contrasena': password
+
+        }); 
+       }
+
+    return dato;
+}
+          
+      
+     
     
+
 }
 
 
