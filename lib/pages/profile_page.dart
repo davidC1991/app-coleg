@@ -1,8 +1,12 @@
+import 'package:app_red_social/Clases%20Auxiliares/crear_Nuevo_Docente.dart';
 import 'package:app_red_social/bloc/firebase_bloc.dart';
+import 'package:app_red_social/bloc/login_bloc.dart';
 import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/pages/tarea_page.dart';
+import 'package:app_red_social/provider/usuario_provider.dart';
+import 'package:app_red_social/utils/utils.dart';
 //import 'package:app_red_social/widgets/botones_cursos.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -38,8 +42,9 @@ class _ProfilePageState extends State<ProfilePage> {
   TextEditingController cursoController = TextEditingController();
   TextEditingController materiaController = TextEditingController();
   TextEditingController emailController = TextEditingController();
+  
   TextEditingController contrasenhaController = TextEditingController();
-
+  String emailDocente;
   bool isFollowing = false;
   final String currentUserId= currentUser?.id;
   String postOrientation= 'grid';
@@ -69,16 +74,19 @@ class _ProfilePageState extends State<ProfilePage> {
   bool checkBoxLectura=false;
   bool checkBoxGeografia=false;
   bool checkBoxHistoria=false;
- 
+  var kontan1 = StringBuffer();
 
-  List cursoss= ['prekinder','kinder','Transicion','primero','segundo','terecero','cuarto','quinto'];
+  List cursoss= ['prekinder','kinder','Transicion','primero','segundo','tercero','cuarto','quinto'];
   List materiass= ['matematicas','castellano','naturales','escritura','ingles','lectura','geografia','historia'];
   Map<String,List<String>> materiasYcursosSelected= new Map();
   List<String>materiasSelected=new List();
   String cursosSelected;
   String miembroId= Uuid().v4();
+   String mensajeRegistroDocente;
+  NuevoDocente nuevoDocente = NuevoDocente();
+  bool visibilidadC1=true;
 
-
+  bool visibilidadC2=true;
   @override
   void initState() { 
     super.initState();
@@ -417,27 +425,14 @@ class _ProfilePageState extends State<ProfilePage> {
       @override
       Widget build(BuildContext context) {
         final firebaseBloc  = Provider.firebaseBloc(context);  
-        
-        firebaseBloc.cargandoStream.listen((a){
-        isLoading=a;
-       // print ('isLoading: $isLoading');
-         });
+        final bloc = Provider.of(context); 
 
-        firebaseBloc.materiaSelectedStream.listen((b){
+        firebaseBloc.cargandoStream.listen((a){isLoading=a;});
+
+        firebaseBloc.materiaSelectedStream.listen((b){materiaSelected=b;});
         
-       // setState(() {
-        materiaSelected=b;
-       // print ('materia seleccionada:::::::::::::::::: $materiaSelected');  
-       // });
-         });
-        
-        firebaseBloc.cursoSelectedStream.listen((c){
-        
-        //setState(() {
-        cursoSelected=c;
-       // print ('curso seleccionado:::::::::::::: $cursoSelected');  
-        //});
-         });
+        firebaseBloc.cursoSelectedStream.listen((c){cursoSelected=c;});
+
         print('contPantalla: $contPantalla');
        
         return Scaffold(
@@ -446,7 +441,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: <Widget>[
                 buildProfileHeaders(),
                 buildTogglePostOrientation(),
-                Expanded(child: Container(child: selectorPantalla(firebaseBloc,context)))
+                Expanded(child: Container(child: selectorPantalla(firebaseBloc,context, bloc)))
               ],
           ),
             floatingActionButton:  contPantalla==1||contPantalla==2||contPantalla==4?FloatingActionButton(
@@ -469,7 +464,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
           
 
-  Widget selectorPantalla(FirebaseBloc firebaseBloc, BuildContext context){
+  Widget selectorPantalla(FirebaseBloc firebaseBloc, BuildContext context,LoginBloc bloc){
 
      switch (contPantalla) {
          case 0 : {return pantallaCursos(firebaseBloc, context);}
@@ -484,14 +479,110 @@ class _ProfilePageState extends State<ProfilePage> {
             break;
          case 5 : {return pantallaAdmin(firebaseBloc, context);}
             break;
-         case 6 : {return firebaseBloc.actorSelectedController.value=='Crear Docente'?pantallaAgregarDocente(firebaseBloc, context)
-                          :pantallaAgregarAlumno(firebaseBloc, context);}
+         case 6 : {return firebaseBloc.actorSelectedController.value=='Crear Docente'?pantallaAgregarDocente(firebaseBloc, context,bloc)
+                         :firebaseBloc.actorSelectedController.value=='Crear Alumno'?pantallaAgregarAlumno(firebaseBloc, context,bloc)
+                         :firebaseBloc.actorSelectedController.value=='Actualizar Docente'?pantallaActualizarDocente(firebaseBloc, context,bloc):null;
+                        // firebaseBloc.actorSelectedController.value=='Actualizar Alumno'?pantallaActualizarAlumno(firebaseBloc, context,bloc)
+
+                  }
             break;               
        }
        return Container();
       }
 
-  pantallaAgregarDocente(FirebaseBloc firebaseBloc, BuildContext context){
+  validarCorreoDocente(BuildContext context,LoginBloc bloc)async{
+     String dato;
+     emailDocente=emailController.text;
+     print('-->$emailDocente');
+     dato=await nuevoDocente.registrarCorreo(context, bloc, emailController.text, '123456');
+     print(dato);
+
+     if(dato!='EMAIL_EXISTS'){
+       mostrarAlerta(context, 'Este correo no esta asociado a ningun docente');
+     }else{
+       //visibilidadC1=false;
+       visibilidadC2=false;
+       setState(() {
+         
+       });
+     }
+
+    }
+                  
+                  
+            
+   pantallaActualizarDocente(FirebaseBloc firebaseBloc, BuildContext context,LoginBloc bloc){
+     print('visibilidadC2:$visibilidadC2');
+     return visibilidadC2?Container(
+         //alignment: Alignment.center,
+         
+         //color: Colors.red,
+         child: Column(
+           crossAxisAlignment: CrossAxisAlignment.center,
+           mainAxisAlignment: MainAxisAlignment.center,
+           children: <Widget>[
+             //------------primer widget visible validacion de correo docente------------------
+            
+               Container(child: 
+               Column(
+                 children: <Widget>[
+                   Text('Ingrese el correo del docente'),
+                    SizedBox(height: 10),
+                    Container(
+                          height: 40,
+                          width: 300,
+                          child: TextField(
+                          controller: emailController,
+                          decoration:inputD('Email docente')
+                        ),
+                      ),
+                    FlatButton(
+                         onPressed: (){
+                        validarCorreoDocente(context, bloc);
+                           },
+                     
+            child: Container(
+                width: 200.0,
+                height: 27.0,
+                child: Text(
+                  'Validar',
+                  style: TextStyle(
+                    color: isFollowing ? Colors.black : Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isFollowing ? Colors.white : Colors.blue,
+                  border: Border.all(
+                    color: isFollowing ? Colors.grey : Colors.blue,
+                  ),
+                  borderRadius: BorderRadius.circular(5.0),
+                   ),
+                  ),
+                 ),  
+                ],
+               )
+              ),
+           //-----------------------------------------------------------------------------------------------
+            
+           ],
+         ),
+       //---------------------formulario de actualizacion docente despues de validacion -----------------
+        
+     ):Container(
+          child: ListView(
+            children: <Widget>[
+              pantallaAgregarDocente(firebaseBloc, context, bloc),
+            ],
+          ),
+        );
+              
+
+            //------------------------------------------------------------------------------------------------ 
+   }
+  
+  pantallaAgregarDocente(FirebaseBloc firebaseBloc, BuildContext context,LoginBloc bloc){
     
     
     return SingleChildScrollView(
@@ -551,7 +642,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ],
 
                 ),
-              ListTile(
+              firebaseBloc.actorSelectedController.value=='Crear Docente'?ListTile(
                 //leading: botonTextoTarea('Tema'),
                 title: Container(
                   height: 30.0,
@@ -561,7 +652,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     decoration:inputD('Escriba el nombre completo del docente')
                   ),
                 ),
-              ),
+              ):Container(),
               
               ListTile(
                 //leading: botonTextoTarea('Tema'),
@@ -585,7 +676,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
               ),
-              ListTile(
+              firebaseBloc.actorSelectedController.value=='Crear Docente'?ListTile(
                 //leading: botonTextoTarea('Tema'),
                 title: Container(
                   height: 30.0,
@@ -595,8 +686,9 @@ class _ProfilePageState extends State<ProfilePage> {
                     decoration:inputD('Escriba el email de ingreso')
                   ),
                 ),
-              ),
-              ListTile(
+              ):Container(),
+
+              firebaseBloc.actorSelectedController.value=='Crear Docente'?ListTile(
                 //leading: botonTextoTarea('Tema'),
                 title: Container(
                   height: 30.0,
@@ -606,16 +698,89 @@ class _ProfilePageState extends State<ProfilePage> {
                     decoration:inputD('Escriba la contraseña de ingreso')
                   ),
                 ),
-              ),
-              botonEnviar(),
+              ):Container(),
+              botonEnviar(firebaseBloc,context,bloc),
             ],
           
       ),
     );
   }
-  botonEnviar(){
+
+  validarRegistro(FirebaseBloc firebaseBloc, LoginBloc bloc)async{
+     
+       materiasYcursosSelected.addAll({cursosSelected:materiasSelected});
+            print('materiasYcursosSelected:$materiasYcursosSelected');
+            print('cursosSelected:$cursosSelected');
+            print('emailController.text:${emailController.text}');
+            print('emailDocente:$emailDocente');
+            print('contrasenhaController.text:${contrasenhaController.text}');
+            
+            if((firebaseBloc.actorSelectedController.value=='Crear Docente'
+              &&materiasYcursosSelected.isNotEmpty==true
+              &&cursosSelected.isNotEmpty==true
+              &&emailController.text.isNotEmpty==true
+              &&contrasenhaController.text.isNotEmpty==true)
+              ||(firebaseBloc.actorSelectedController.value=='Actualizar Docente'
+              &&materiasYcursosSelected.isNotEmpty==true
+              &&cursosSelected.isNotEmpty==true)){
+              
+              print('campos llenos');
+              firebaseBloc.actorSelectedController.value=='Crear Docente'?mensajeRegistroDocente=await nuevoDocente.enviarRegistro(context,
+                                                                                                                                   bloc,
+                                                                                                                                   materiasYcursosSelected,
+                                                                                                                                   cursosSelected,
+                                                                                                                                   materiasSelected,
+                                                                                                                                   emailController.text.toLowerCase(),
+                                                                                                                                   contrasenhaController.text,
+                                                                                                                                   nombreController.text.toLowerCase())
+                                                                         :mensajeRegistroDocente=await nuevoDocente.actualizarRegistroDocente(context,
+                                                                                                                                   bloc,
+                                                                                                                                   materiasYcursosSelected,
+                                                                                                                                   cursosSelected,
+                                                                                                                                   materiasSelected,
+                                                                                                                                   emailController.text.toLowerCase());
+              print(mensajeRegistroDocente);
+              emailController.clear();
+              nombreController.clear();
+              cursoController.clear();
+              materiaController.clear(); 
+              contrasenhaController.clear();
+
+               checkBoxPrekinder=false;
+               checkBoxKinder=false;
+               checkBoxTransicion=false;
+               checkBoxPrimero=false;
+               checkBoxSegundo=false;
+               checkBoxTercero=false;
+               checkBoxCuarto=false;
+               checkBoxQuinto =false;
+               checkBoxMatematicas=false;
+               checkBoxCastellano=false;
+               checkBoxNaturales=false;
+               checkBoxEscritura=false;
+               checkBoxIngles=false;
+               checkBoxLectura=false;
+               checkBoxGeografia=false;
+               checkBoxHistoria=false;
+               materiasYcursosSelected.clear();
+               cursosSelected='';  
+               materiasSelected.clear();   
+               mostrarAlerta(context, 'Registro exitoso');                    
+               visibilidadC2=true;
+               setState(() {});
+            }else{
+              print('algun campo vacio');
+               mostrarAlerta(context, 'Llene todos los campos');
+            }
+           
+  }
+ 
+  botonEnviar(FirebaseBloc firebaseBloc,BuildContext context, LoginBloc bloc){
+    
     return FlatButton(
-          onPressed: ()=>  enviarRegistro(),
+          onPressed: (){
+            validarRegistro(firebaseBloc,bloc);
+             },
           child: Container(
             width: 200.0,
             height: 27.0,
@@ -638,31 +803,6 @@ class _ProfilePageState extends State<ProfilePage> {
          
         );
   }
-enviarRegistro()async{
-  materiasYcursosSelected.addAll({cursosSelected:materiasSelected});
-  print(materiasYcursosSelected);
-  docenteRef.document(miembroId).setData({
-          'id': miembroId,
-          'email': emailController.text,
-          'displayName': nombreController.text,
-          'timestamp': DateTime.now(),
-          'docente': true,
-          'cursoInd': cursosSelected,
-          'curso': materiasYcursosSelected,
-          'admin'  : false,
-          'contrasena': contrasenhaController.text
-
-        });
-
-    emailController.clear();
-    nombreController.clear();
-    cursoController.clear();
-    materiaController.clear(); 
-    contrasenhaController.clear();    
-}
-
-    
-
 
  Widget seleccionCurso(List cursos, BuildContext context){
    
@@ -853,13 +993,15 @@ enviarRegistro()async{
                                 break;   
                             }
                        
-                       var kontan1 = StringBuffer();
+                      
                            materiasSelected.forEach((item){
                            kontan1.write('$item-');   
                          });
-                         a=kontan1.toString();
-                         materiaController.text=a;
-                         //print(a);           
+                         materiaController.text=kontan1.toString();
+                         kontan1.clear();
+                         
+                         
+                         print('materias seleccionadas:${materiaController.text}');           
                        setState((){ });
                       },
 
@@ -894,24 +1036,24 @@ enviarRegistro()async{
   );
 }
 
-   pantallaAgregarAlumno(FirebaseBloc firebaseBloc, BuildContext context){
+   pantallaAgregarAlumno(FirebaseBloc firebaseBloc, BuildContext context,LoginBloc bloc){
     return Container(child: Text(firebaseBloc.actorSelectedController.value));
   }
 
   Widget pantallaAdmin(FirebaseBloc firebaseBloc, BuildContext context){
-    List actores= ['Crear Docente','Crear Alumno'];
-    List colores=[Colors.brown.shade300, Colors.red.shade300];
+    List actores= ['Crear Docente','Crear Alumno','Actualizar Alumno','Actualizar Docente','Eliminar Alumno','Eliminar Docente'];
+    List colores=[Colors.brown.shade300, Colors.red.shade300,Colors.brown.shade300, Colors.red.shade300,Colors.brown.shade300, Colors.red.shade300];
     return Container(
       height: 200.0,
       width: double.infinity,
       child: Swiper(
         layout: SwiperLayout.STACK,
-        itemWidth: 300.0,
-        itemHeight: 300.0,
+        itemWidth: 250.0,
+        itemHeight: 350.0,
         itemBuilder: (BuildContext context , int i){
           return _crearBotonRedondeado(colores[i], Icons.border_all, actores[i], context, firebaseBloc); 
         },
-        itemCount: 2,
+        itemCount: 6,
         pagination: new SwiperPagination(),
         //control: new SwiperControl(),
       ),
@@ -1129,7 +1271,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
                   radius: 35.0,
                   child: Icon(icono, color: Colors.white, size: 50.0),
                 ),
-              Text(texto, style: TextStyle(color: Colors.white,fontSize:22.0, fontWeight: FontWeight.bold)),  
+              Text(texto, style: TextStyle(color: Colors.white,fontSize:15.0, fontWeight: FontWeight.bold)),  
           
              ],
            ),  
