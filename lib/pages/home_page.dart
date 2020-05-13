@@ -31,7 +31,7 @@ User currentUser;
 String username;
 int cont_auth=0;
 bool docente=false;
-String curso='primero';
+//String curso;
 
 class HomePage extends StatefulWidget {
   String email;
@@ -88,23 +88,13 @@ class _HomePageState extends State<HomePage> {
   validarUsuario()async{
     
       print('usuario ingresó con la cuentas: ${widget.email}');
-      if (widget.email == 'david.callejasc@hotmail.es'){
-        print('Usted es un profesor ---------');
-        docente=true;
-        await createUser_docente();
-      }else if(widget.email == 'test@test.com'){
+      
+      if(widget.email == 'test@test.com'){
         print('Usted es un administrador');
         docente=false;
         createUser_admin();
       }
-      else {
-      docente=false;
-      print('===============||===============');
-      print('cont_aut:$cont_auth');
-      
-      createUserInFirestore();
-      
-      }
+      else {createUserInFirestore();}
       setState(() {
           isAuth= true;
         });
@@ -113,120 +103,63 @@ class _HomePageState extends State<HomePage> {
 
 createUserInFirestore() async{
        //chequear que el la coleccion de usuario existe en db
-       
+       print(widget.id);
        //final GoogleSignInAccount user = googleSignIn.currentUser;
        DocumentSnapshot doc = await usersRef.document(widget.id).get();
-       //print('doc: ${user.}');
-       if(!doc.exists){
+      
+      if(doc.exists){
+         docente=false;
+          print('usted es un alumno.......................');
+       }else{
+         print('Usted es un docente....................');
+         DocumentSnapshot doc1 = await docenteRef.document(widget.id).get();
+         docente=true;
+         doc=doc1;
+          }
+       print(':::::::::::::::::::');
+       print(doc.data);
+       if(doc.data['username']==''){
        //si el usuario no exite crear un a cuenta
-      print('cont_aut:$cont_auth');
-      print('==========================');
-      //if (cont_auth<2){
-        cont_auth=2;
-        print(':::::::::::::::::::');
-          username = await Navigator.push(context, MaterialPageRoute(
-          builder: (context)=> CreateAccount()));
-     //     print('ya ingreso el dato---------------------->');
-      //} 
-
-        
-          print('username:-------------->! $username');
-       //conseguir el username para crear un nuevo docuemento de usuario en db
-        usersRef.document(widget.id).setData({
-          'id': widget.id,
-          'username': username,
-          'photoUrl': '',
-          'email': widget.email,
-          'displayName': widget.nombre,
-          'bio': '',
-          'timestamp': timestamp,
-          'docente': false,
-          'curso'  : curso,
-          'admin'  : false
-
-        });
-        //'[matematicas, geografia, naturales, castellano]'
-       //make new user their own follower (to include their posts in their timeline)
-         /* await followersRef  
-          .document(u.id)
-          .collection('userFollowers')
-          .document(user.id).
-          setData({}); */ 
-        //volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
-        //las otras paginas
-
-        doc = await usersRef.document(widget.id).get();
-       }
        
-       currentUser = User.fromDocument(doc);
-       print(currentUser);
-       print(currentUser.username);
-       print('administrador: ${currentUser.docente}');
-        
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('keyUsuarioId', currentUser.id);
-      SharedPreferences prefs1 = await SharedPreferences.getInstance();
-      await prefs1.setString('keyUserName', currentUser.displayName);
-     }
-
-    createUser_docente() async{
-       //chequear que el la coleccion de usuario existe en db
+       username = await Navigator.push(context, MaterialPageRoute(
+       builder: (context)=> CreateAccount()));
+       print('username:-------------->! $username');
        
-       //final GoogleSignInAccount user = googleSignIn.currentUser;
-       DocumentSnapshot doc = await docenteRef.document(widget.id).get();
-       //print('doc: ${user.}');
-       if(!doc.exists){
-       //si el usuario no exite crear un a cuenta
-      print('cont_aut:$cont_auth');
-      print('==========================');
-      //if (cont_auth<2){
-        //cont_auth=2;
-        print(':::::::::::::::::::');
-        username = await Navigator.push(context, MaterialPageRoute(
-        builder: (context)=> CreateAccount()));
-     //     print('ya ingreso el dato---------------------->');
-      //} 
-
-        
-          print('username:-------------->! $username');
-       //conseguir el username para crear un nuevo docuemento de usuario en db
-        docenteRef.document(widget.id).setData({
-          'id': widget.id,
+       if(docente){
+           docenteRef.document(widget.id).updateData({
           'username': username,
-          'photoUrl': '',
-          'email': widget.email,
-          'displayName': widget.nombre,
-          'bio': '',
           'timestamp': timestamp,
-          'docente': false,
-          'materias': ['matematicas','sociales'],
-          'admin'  : false
-
-        });
-        //'[matematicas, geografia, naturales, castellano]'
-       //make new user their own follower (to include their posts in their timeline)
-        /*  await followersRef  
-          .document(user.id)
-          .collection('userFollowers')
-          .document(user.id).
-          setData({}); 
-         *///volvemos a solicitar los datos de este usuario para almacenarlos y actualizarlos en 
-        //las otras paginas
-
+          });
         doc = await docenteRef.document(widget.id).get();
+ 
+       }else{
+         usersRef.document(widget.id).updateData({
+          'username': username,
+          'timestamp': timestamp,
+          });
+       doc = await usersRef.document(widget.id).get();
+    
        }
+               }
+
        
        currentUser = User.fromDocument(doc);
        print(currentUser);
        print(currentUser.username);
-        print('docente: ${currentUser.docente}');
-        
+       print('administrador: ${currentUser.admin}');
+      if(!docente){
+      print('curso del alumno: ${currentUser.curso}');
+      SharedPreferences prefs2 = await SharedPreferences.getInstance();
+      await prefs2.setString('keyCurso', doc.data['curso']);    
+      }
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('keyUsuarioId', currentUser.id);
       SharedPreferences prefs1 = await SharedPreferences.getInstance();
       await prefs1.setString('keyUserName', currentUser.displayName);
      }
-
+             
+     
+       
 
     createUser_admin() async {
           //chequear que el la coleccion de usuario existe en db

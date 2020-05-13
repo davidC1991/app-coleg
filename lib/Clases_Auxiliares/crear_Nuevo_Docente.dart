@@ -36,8 +36,8 @@ class NuevoDocente{
             mostrarAlerta(context, 'La contraseña debe ser minimo 6 caracteres');
             } else{mostrarAlerta(context, 'Este correo ya esta agregado a un usuario');} 
      }else{
-     docenteRef.document(Uuid().v4()).setData({
-          'id': Uuid().v4(),
+     docenteRef.document(dato).setData({
+          'id': dato,
           'email': email,
           'bio': '',
           'username': '',
@@ -65,7 +65,7 @@ Future consultarCorreo(BuildContext context, LoginBloc bloc, String email, Strin
       
          if (info['ok']){
           print('correo registrado correctamente');
-            //return info['ok'];  
+            return info['id'];  
            }else{
            mostrarAlerta(context, info['mensaje']);
             
@@ -79,8 +79,10 @@ Future registrarCorreo(BuildContext context, LoginBloc bloc, String email, Strin
    final info = await usuarioProvider.nuevoUsuario(email, password);
       
          if (info['ok']){
-          print('correo registrado correctamente');
-            //return info['ok'];  
+          print('correo registrado... correctamente');
+          
+         // print(info['ok']);
+            return info['id'];  
            }else{
            //mostrarAlerta(context, info['mensaje']);
             
@@ -170,8 +172,8 @@ Future crearAlumno(BuildContext context, LoginBloc bloc,Map<String,List<String>>
             } else{mostrarAlerta(context, 'Este correo ya esta agregado a un usuario');}
      }else{
      print('guardando alumno....');  
-     usersRef.document(Uuid().v4()).setData({
-          'id': Uuid().v4(),
+     usersRef.document(dato).setData({
+          'id': dato,
           'bio': '',
           'username': '',
           'photoUrl':'',

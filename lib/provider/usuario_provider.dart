@@ -60,7 +60,7 @@ class UsuarioProvider {
   if (decodeResp.containsKey('idToken')){
      _prefs.token = decodeResp['idToken'];
     //Todo: salvar el token en el storage
-    return {'ok': true , 'token' : decodeResp['idToken']};
+    return {'ok': true , 'token' : decodeResp['idToken'],'id': decodeResp['localId']};
   }else {
     return {'ok' : false, 'mensaje' : decodeResp['error']['message']};
   }

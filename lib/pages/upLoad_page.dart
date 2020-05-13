@@ -389,6 +389,7 @@ Widget botonTextoTarea(String text){
   @override
   Widget build(BuildContext context) {
      final firebaseBloc  = Provider.firebaseBloc(context); 
+    
     firebaseBloc.materiaSelectedStream.listen((b){
         print('====================================');
         //setState(() {

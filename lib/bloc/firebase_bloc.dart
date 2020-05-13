@@ -17,16 +17,24 @@ class FirebaseBloc{
   final cursoSelectedController   = new BehaviorSubject<String>();
   final _materiasAlumonsController   = new BehaviorSubject<List<String>>();
   final actorSelectedController   = new BehaviorSubject<String>();
-  
+   final _alumnosPropiosController = new BehaviorSubject<List<DocumentSnapshot>>();
+   final boxController   = new BehaviorSubject<bool>();
+   final alumnoSelectedController   = new BehaviorSubject<String>();
+   final docenteUserNameController   = new BehaviorSubject<String>();
+   
 
 
   String materiaSelected;
   String cursoSelected;
   List<DocumentSnapshot> todasTareas = new List();
   final _datosProvider   = new DatosProvider();
-
+ 
+  Stream<bool> get boxStream => boxController;
+  Stream<String> get alumnoSelectedStream => alumnoSelectedController;
+   Stream<String> get docenteUserNameStream => docenteUserNameController;
   Stream<String> get actorSelectedStream => actorSelectedController;
-  Stream<List<DocumentSnapshot>> get comentariosStream => _comentariosController;
+   Stream<List<DocumentSnapshot>> get comentariosStream => _comentariosController;
+  Stream<List<DocumentSnapshot>> get alumnosPropiosStream => _alumnosPropiosController;
   Stream<List<DocumentSnapshot>> get tareasStream => _tareasController;
   Stream<List<String>> get tareasAlumnoStream => _tareasAlumnoController;
   Stream <Map<String,Object>>get materiasStream => _materiasController;
@@ -37,6 +45,23 @@ class FirebaseBloc{
   Stream<String> get materiaSelectedStream => materiaSelectedController;
   Stream<String> get cursoSelectedStream => cursoSelectedController;
   Stream<List<String>> get materiasAlumnosStream => _materiasAlumonsController;
+
+cargarAlumnosPropios()async{
+  List<DocumentSnapshot> listaEstudiantes= new List();
+  final alumnos= await _datosProvider.getAlumnosPropios();
+  print('elegir alumnos del curso asignado al docente');
+  //print(alumnos[0].data['curso']);
+  print(cursoSelectedController.value);
+  
+  for (var i = 0; i < alumnos.length; i++) {
+    if(alumnos[i].data['curso']==cursoSelectedController.value){
+      listaEstudiantes.add(alumnos[i]);
+    }
+  }
+  
+  _alumnosPropiosController.sink.add(listaEstudiantes);
+
+}
 
 cargarTareaAlumno()async{
    _cargandoController.sink.add(true);
@@ -52,11 +77,37 @@ cargarMateriasAlumons()async{
 }
 cargarComentarios()async {
  
+   String alumno;
+   String docente;
+   List<DocumentSnapshot> listaComentarios= new List();
+   alumno=alumnoSelectedController.value;
+   docente=docenteUserNameController.value;
+   print('alumnos escogido:$alumno');
+   print('docente de la materia:$docente');
+
   final comentarios= await _datosProvider.getComentarios();
-  //print(comentarios);
-  _comentariosController.sink.add(comentarios);
+  //print(comentarios[0].data['username']);
+
+   for (var i = 0; i < comentarios.length; i++) {
+
+     if(comentarios[i].data['docente']){
+      if(comentarios[i].data['alumno']==alumno){
+        listaComentarios.add(comentarios[i]);
+      }
+     }
+    if(comentarios[i].data['username']==alumno){
+       
+        listaComentarios.add(comentarios[i]);
+      }
+   } 
+  _comentariosController.sink.add(listaComentarios);
   
 }
+      
+      
+
+          
+
 
 cargarTareas()async {
        // print('trayendo lo que el docente anteriormente presionó');
@@ -85,7 +136,7 @@ cargarTareas()async {
       todasTareas.clear();
       //print(cursoSelected);
       //print(materiaSelected);
-      //print(tareas.documents[1].data.containsValue(cursoSelected));
+      print(tareas.documents.length);
       //print(tareas.documents[1].data.containsValue(materiaSelected));
       for (var i = 0; i < tareas.documents.length; i++) {
           if (tareas.documents[i].data.containsValue(cursoSelected)&&tareas.documents[i].data.containsValue(materiaSelected)){
@@ -132,6 +183,10 @@ cargarTareas()async {
      contPantallaController?.close();
     _materiasAlumonsController?.close();
     _tareasAlumnoController?.close();
+    _alumnosPropiosController?.close();
+    boxController?.close();
+    alumnoSelectedController?.close();
+    docenteUserNameController?.close();
     //_articulosCarritoController?.close();
   }
 

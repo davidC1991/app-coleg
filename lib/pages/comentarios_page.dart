@@ -5,9 +5,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:app_red_social/widgets/header.dart';
 import 'package:app_red_social/pages/profile_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-
+ 
 class ComentariosPage extends StatefulWidget {
   DocumentSnapshot tarea;
 
@@ -20,7 +21,20 @@ class ComentariosPage extends StatefulWidget {
 class _ComentariosPageState extends State<ComentariosPage> {
   
   TextEditingController commentController = TextEditingController();
-  
+  ScrollController _scrollController = new ScrollController();
+   String nombre; 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    iniciarNombre();
+   
+      
+  }
+  iniciarNombre()async{
+     SharedPreferences prefs = await SharedPreferences.getInstance();
+     nombre= prefs.getString('keyUserName');
+  }
   @override
   Widget build(BuildContext context) {
     final firebaseBloc  = Provider.firebaseBloc(context);  
@@ -38,10 +52,10 @@ class _ComentariosPageState extends State<ComentariosPage> {
              ListTile(
               title: TextFormField(
                 controller: commentController,
-                decoration: InputDecoration(labelText: 'write a comment...'),
+                decoration: InputDecoration(labelText: 'Escribe tu Respuesta...'),
               ),
               trailing: OutlineButton(
-                onPressed:enviarComentario, 
+                onPressed:(){enviarComentario(firebaseBloc);}, 
                 //addComment,
                 borderSide: BorderSide.none,
                 child: Text('Enviar'),
@@ -60,9 +74,10 @@ class _ComentariosPageState extends State<ComentariosPage> {
       stream: firebaseBloc.comentariosStream,
       builder: (context, snapshot){
         if (snapshot.hasData){
-          print(snapshot.data);
+          //print(snapshot.data);
           List<DocumentSnapshot> comentario=snapshot.data;
           return ListView.builder(
+            controller: _scrollController,
             itemCount: comentario.length,
             itemBuilder: (context, i){
               return listaComentarios(context, comentario[i],firebaseBloc);
@@ -171,22 +186,29 @@ class _ComentariosPageState extends State<ComentariosPage> {
     );
 
  }
-  enviarComentario(){
+  enviarComentario(FirebaseBloc firebaseBloc){
  
     final DateTime timestamp1= DateTime.now();   
     commentsRef
         .document(widget.tarea['postId'])
         .collection('comments')
         .add({
-          'username': widget.tarea['nombreDoc'],
+          'username':nombre,
           'comment': commentController.text,
           'timestamp': timestamp1,
           'avatarUrl': currentUser.photoUrl,
           'userId': currentUser.id,
-          'docente': docente
+          'docente': docente,
+          'alumno' : docente?firebaseBloc.alumnoSelectedController.value:'',
         });
+
     FocusScope.of(context).requestFocus(new FocusNode());    
     commentController.clear();   
+    _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            curve: Curves.easeOut,
+            duration: const Duration(milliseconds: 300),
+          );
     setState(() {
       
     });

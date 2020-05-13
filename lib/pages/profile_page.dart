@@ -1,10 +1,11 @@
-import 'package:app_red_social/Clases%20Auxiliares/crear_Nuevo_Docente.dart';
+import 'package:app_red_social/Clases_Auxiliares/crear_Nuevo_Docente.dart';
 import 'package:app_red_social/bloc/firebase_bloc.dart';
 import 'package:app_red_social/bloc/login_bloc.dart';
 import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/pages/tarea_page.dart';
+import 'package:app_red_social/pages/upLoad_page.dart';
 import 'package:app_red_social/provider/usuario_provider.dart';
 import 'package:app_red_social/utils/utils.dart';
 //import 'package:app_red_social/widgets/botones_cursos.dart';
@@ -83,6 +84,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String cursosSelected;
   String miembroId= Uuid().v4();
    String mensajeRegistroDocente;
+   bool isDocente;
   NuevoDocente nuevoDocente = NuevoDocente();
   bool visibilidadC1=true;
 
@@ -169,9 +171,13 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
      
-      FlatButton tareaButton(){
+      FlatButton tareaButton(BuildContext context){
         return FlatButton(
-          onPressed: ()=>  Navigator.pushNamed(context, 'foto'),
+          onPressed: (){
+          Navigator.push(context, MaterialPageRoute(builder: (context) => UpLoadPage())).then((value) {
+            setState(() {});
+            });
+          },
           child: Container(
             width: 200.0,
             height: 27.0,
@@ -282,7 +288,7 @@ class _ProfilePageState extends State<ProfilePage> {
           });  
       }
     
-      buildProfileHeaders(){
+      buildProfileHeaders(BuildContext context, FirebaseBloc firebaseBloc){
         return FutureBuilder(
           future: widget.docenteb?docenteRef.document(widget.profileId).get():widget.admin?adminRef.document(widget.profileId).get():usersRef.document(widget.profileId).get(),
           builder: (context, snapshot){
@@ -290,6 +296,7 @@ class _ProfilePageState extends State<ProfilePage> {
                return circularProgress(context);
              } 
              User user = User.fromDocument(snapshot.data);
+             firebaseBloc.alumnoSelectedController.sink.add(user.displayName);
              return Padding(
                padding: EdgeInsets.only(left:15.0,right:15.0, top: 10.0, bottom: 0.0),
                child: Column(
@@ -354,7 +361,7 @@ class _ProfilePageState extends State<ProfilePage> {
                          ),
                          SizedBox(width: 24.0,),
                          
-                         contPantalla==2?tareaButton():Container(),
+                         contPantalla==2?tareaButton(context):Container(),
                        ],
                      ),
                    ),
@@ -439,9 +446,9 @@ class _ProfilePageState extends State<ProfilePage> {
           appBar: header(context, textoTitulo: 'perfil'),
           body: Column(
                 children: <Widget>[
-                buildProfileHeaders(),
+                buildProfileHeaders(context,firebaseBloc),
                 buildTogglePostOrientation(),
-                Expanded(child: Container(child: selectorPantalla(firebaseBloc,context, bloc)))
+                Flexible(child: selectorPantalla(firebaseBloc,context, bloc))
               ],
           ),
             floatingActionButton:  contPantalla==1||contPantalla==2||contPantalla==4||contPantalla==6?FloatingActionButton(
@@ -1113,11 +1120,17 @@ streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
       if(snapshot.hasData){
        //tareas.clear();
        tareas =snapshot.data;
-       //print(tareas[0].data['mediaUrl']);
+       print('Nombre docente:----------------->');
+       print(tareas[0].data['nombreDoc']);
+       firebaseBloc.docenteUserNameController.sink.add(tareas[0].data['nombreDoc']);
 
          if(postOrientation=='grid'){
          
              return _dibujarCuadriculasReportes(context, tareas, firebaseBloc);
+          
+              
+               
+             
           }else if (postOrientation=='list'){
             
             return ListView.builder(
@@ -1130,7 +1143,7 @@ streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
         //return Container();
         
       }else{
-        return CircularProgressIndicator();
+        return   Center(child:CircularProgressIndicator(),);
       }
     },
   ); 
@@ -1161,7 +1174,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
         //return Container();
         
       }else{
-        return CircularProgressIndicator();
+        return Center(child:CircularProgressIndicator(),);
       }
     },
   ); 
@@ -1181,7 +1194,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
         //return Container();
         return botones(cursos,context,firebaseBloc);
       }else{
-        return CircularProgressIndicator();
+        return Center(child:CircularProgressIndicator(),);
       }
     },
   );
@@ -1215,7 +1228,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
         return botones(materias, context,firebaseBloc);
       //return Container();
       }else{
-        return CircularProgressIndicator();
+        return Center(child:CircularProgressIndicator(),);
       }
     },
   );
@@ -1236,7 +1249,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
         return botones(materias, context,firebaseBloc);
       //return Container();
       }else{
-        return CircularProgressIndicator();
+        return Center(child:CircularProgressIndicator(),);
       }
     },
   );
@@ -1355,11 +1368,13 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
     child: GestureDetector(
       onTap: (){
           //firebaseBloc.listaTareaElegidaController.sink.add(false);
-          vistaTareaElegida=false;
+          vistaTareaElegida=true;
           idTarea=tareas[i].data['postId'];
+          print(idTarea);
           Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TareaPage(tareas: tareas, tarea: tareas[i],vistaTareaElegida:vistaTareaElegida)));
+          
+          MaterialPageRoute(builder: (context) => TareaPage(tareas: tareas, tarea: tareas[i],vistaTareaElegida:vistaTareaElegida,docenteb:widget.docenteb)));
           },
       child: Card(
                   margin: EdgeInsets.symmetric(horizontal: 2.0),
@@ -1395,7 +1410,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
           vistaTareaElegida=true;
           Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => TareaPage(tareas: tareas, tarea: tareas[i],vistaTareaElegida:vistaTareaElegida)));
+          MaterialPageRoute(builder: (context) => TareaPage(tareas: tareas, tarea: tareas[i],vistaTareaElegida:vistaTareaElegida,docenteb:widget.docenteb)));
           },
           //Navigator.pushNamed(context, 'tareaPage', tarea: tareas[i]),
           child: Card(
