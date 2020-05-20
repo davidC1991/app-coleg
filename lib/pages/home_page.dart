@@ -16,6 +16,7 @@ import 'Notifications_page.dart';
 final GoogleSignIn googleSignIn = GoogleSignIn();
 final StorageReference storageRef = FirebaseStorage.instance.ref();
 final usersRef=Firestore.instance.collection('users');
+final calificacionesRef=Firestore.instance.collection('calificaciones');
 final adminRef=Firestore.instance.collection('admin');
 final docenteRef=Firestore.instance.collection('docente');
 final postsRef=Firestore.instance.collection('posts');

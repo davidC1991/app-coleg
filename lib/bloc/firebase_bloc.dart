@@ -21,16 +21,20 @@ class FirebaseBloc{
    final boxController   = new BehaviorSubject<bool>();
    final alumnoSelectedController   = new BehaviorSubject<String>();
    final docenteUserNameController   = new BehaviorSubject<String>();
+   final alumnoIdController   = new BehaviorSubject<String>();
    
 
 
   String materiaSelected;
   String cursoSelected;
+   String alumno_1;
+   String docente_1;
   List<DocumentSnapshot> todasTareas = new List();
   final _datosProvider   = new DatosProvider();
  
   Stream<bool> get boxStream => boxController;
   Stream<String> get alumnoSelectedStream => alumnoSelectedController;
+   Stream<String> get alumnoIdStream => alumnoIdController;
    Stream<String> get docenteUserNameStream => docenteUserNameController;
   Stream<String> get actorSelectedStream => actorSelectedController;
    Stream<List<DocumentSnapshot>> get comentariosStream => _comentariosController;
@@ -77,13 +81,19 @@ cargarMateriasAlumons()async{
 }
 cargarComentarios()async {
  
-   String alumno;
-   String docente;
+  
    List<DocumentSnapshot> listaComentarios= new List();
-   alumno=alumnoSelectedController.value;
-   docente=docenteUserNameController.value;
-   print('alumnos escogido:$alumno');
-   print('docente de la materia:$docente');
+    alumnoSelectedStream.listen((b){
+        alumno_1=b;
+     });
+      
+    docenteUserNameStream.listen((c) {
+      docente_1=c;
+     });    
+      
+       
+   print('alumnos escogido:$alumno_1');
+   print('docente de la materia:$docente_1');
 
   final comentarios= await _datosProvider.getComentarios();
   //print(comentarios[0].data['username']);
@@ -91,11 +101,11 @@ cargarComentarios()async {
    for (var i = 0; i < comentarios.length; i++) {
 
      if(comentarios[i].data['docente']){
-      if(comentarios[i].data['alumno']==alumno){
+      if(comentarios[i].data['alumno']==alumno_1){
         listaComentarios.add(comentarios[i]);
       }
      }
-    if(comentarios[i].data['username']==alumno){
+    if(comentarios[i].data['username']==alumno_1){
        
         listaComentarios.add(comentarios[i]);
       }
@@ -134,8 +144,9 @@ cargarTareas()async {
       _cargandoController.sink.add(true);
       final tareas= await _datosProvider.getTareas();
       todasTareas.clear();
-      //print(cursoSelected);
-      //print(materiaSelected);
+      print('tareas--|--$tareas');
+      print(materiaSelected);
+      
       print(tareas.documents.length);
       //print(tareas.documents[1].data.containsValue(materiaSelected));
       for (var i = 0; i < tareas.documents.length; i++) {
@@ -148,6 +159,7 @@ cargarTareas()async {
          // print(todasTareas[i].documentID);  
         }
      //-----------------------------------------------------------------------------------------------
+     print(todasTareas);
      _tareasController.sink.add(todasTareas);
      _cargandoController.sink.add(false);
   }
@@ -187,6 +199,7 @@ cargarTareas()async {
     boxController?.close();
     alumnoSelectedController?.close();
     docenteUserNameController?.close();
+    alumnoIdController?.close();
     //_articulosCarritoController?.close();
   }
 

@@ -1117,9 +1117,13 @@ streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
    return StreamBuilder<List<DocumentSnapshot>>(
     stream: firebaseBloc.tareasStream,
     builder: (context, snapshot){
-      if(snapshot.hasData){
+      if(snapshot.data!=null){
        //tareas.clear();
        tareas =snapshot.data;
+       if(tareas.isEmpty){
+          return Center(child:Text('El docente no ha publicado tareas aun'));
+          
+       }else{
        print('Nombre docente:----------------->');
        print(tareas[0].data['nombreDoc']);
        firebaseBloc.docenteUserNameController.sink.add(tareas[0].data['nombreDoc']);
@@ -1141,7 +1145,7 @@ streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
            });
           } 
         //return Container();
-        
+       }
       }else{
         return   Center(child:CircularProgressIndicator(),);
       }

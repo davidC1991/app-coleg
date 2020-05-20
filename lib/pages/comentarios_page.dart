@@ -21,8 +21,12 @@ class ComentariosPage extends StatefulWidget {
 class _ComentariosPageState extends State<ComentariosPage> {
   
   TextEditingController commentController = TextEditingController();
+  TextEditingController calificacionController = TextEditingController();
   ScrollController _scrollController = new ScrollController();
-   String nombre; 
+   String nombre,usuarioId,nombreAlumno,materia;
+   String calificacion=''; 
+   final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -34,18 +38,49 @@ class _ComentariosPageState extends State<ComentariosPage> {
   iniciarNombre()async{
      SharedPreferences prefs = await SharedPreferences.getInstance();
      nombre= prefs.getString('keyUserName');
+     SharedPreferences prefs1 = await SharedPreferences.getInstance();
+     usuarioId= prefs1.getString('keyUsuarioId');
+     materia=widget.tarea['materia'];
   }
   @override
   Widget build(BuildContext context) {
     final firebaseBloc  = Provider.firebaseBloc(context);  
     firebaseBloc.cargarComentarios();
 
+
+      firebaseBloc.alumnoSelectedStream.listen((b){     
+        nombreAlumno=b;
+        print ('stream nombre alumno: $nombreAlumno');  
+      });
+
+       
      return GestureDetector(
        onTap: (){
          FocusScope.of(context).requestFocus(new FocusNode());
        },
        child: Scaffold(
-        appBar:header(context, textoTitulo: 'Comentarios'),
+        key: _scaffoldKey,
+        appBar:AppBar(
+          backgroundColor: Theme.of(context).accentColor,
+          centerTitle: true,
+          title: Text(
+      'Comentarios',
+      style: TextStyle(
+       color:Colors.white,
+       fontFamily: 'Signatra',
+       fontSize: 22.0,
+        ),
+        ),
+        actions: <Widget>[
+           IconButton(
+             icon: Icon(Icons.check_circle_outline),
+             onPressed: (){
+               calificarEstudiante(context);
+             }
+         )
+        ],
+        
+        ),
         body: Column(
           children: <Widget>[
             Expanded(child:comentarios(firebaseBloc)),
@@ -68,6 +103,97 @@ class _ComentariosPageState extends State<ComentariosPage> {
      );
   }
 
+  calificarEstudiante(BuildContext context)async{
+    return showDialog(
+      context:context,
+      builder: (context)=>AlertDialog(
+        //contentPadding:EdgeInsets.all(50) ,
+        //clipBehavior: ,
+        //title: Text('ggpp'),
+        shape:RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        content: TextField(
+          controller: calificacionController,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            icon: Icon(Icons.check_circle_outline),
+            labelText: 'Ingrese la calificación',
+            border: OutlineInputBorder(
+              borderRadius:BorderRadius.all(Radius.circular(10.0)),
+            ),
+          ),
+          onChanged: (val){
+            print('val:$val');
+            calificacion=val;
+          },
+        ),
+
+        actions: <Widget>[
+          FlatButton(
+            child: Text('Cancelar'),
+            onPressed: (){
+              Navigator.pop(context);
+            },
+          ),
+          FlatButton(
+            child: Text('Guardar'),
+            onPressed: (){
+              print('calificacion:$calificacion');
+               if(calificacion.isNotEmpty){  
+               enviarCaliificacion();
+              calificacionController.clear();
+              Navigator.pop(context);
+               setState(() {
+      
+              });
+              }else{
+                print('ñññññññ');
+                _scaffoldKey.currentState.showSnackBar(
+                SnackBar(
+                  content:Text('Debe digitar una nota del 0 al 5'),
+                  duration: Duration(milliseconds: 500),
+                ),
+               );
+              }
+            },
+          )
+        ],
+
+        )
+      );
+  }
+    
+  enviarCaliificacion()async{
+      
+         calificacionesRef
+         .document(nombreAlumno)
+         .collection('materias')
+         .document(widget.tarea['postId'])
+         .setData({
+          'materia':materia,
+          'nombreAlumno': nombreAlumno,
+          'IdProfesor' :usuarioId,
+          'nombreDocente':nombre,
+          'calificacion': calificacion,
+          'tema' : widget.tarea['tituloTema'],
+          'fechaLimite': widget.tarea['fechaLimite'],
+          'idTarea': widget.tarea['postId']
+        });
+      calificacion='';
+    }  
+       
+        
+        
+ 
+
+       
+ 
+        
+
+       
+      
+    
   comentarios(FirebaseBloc firebaseBloc){
     
     return StreamBuilder<List<DocumentSnapshot>>(
@@ -76,6 +202,9 @@ class _ComentariosPageState extends State<ComentariosPage> {
         if (snapshot.hasData){
           //print(snapshot.data);
           List<DocumentSnapshot> comentario=snapshot.data;
+          //print('alumnoId--->: ${comentario[0].data['username']}');
+          //firebaseBloc.alumnoIdController.sink.add(event);
+          print('cantidad de comentarios--->: ${comentario.length}');
           return ListView.builder(
             controller: _scrollController,
             itemCount: comentario.length,
@@ -93,10 +222,15 @@ class _ComentariosPageState extends State<ComentariosPage> {
   }
 
   listaComentarios(BuildContext context, DocumentSnapshot comentario, FirebaseBloc firebaseBloc){
-   
+    //print('${comentario['comment']}');
     if(comentario['docente']){
+      
+    // nombreAlumno=comentario.data['alumno'];
+     //firebaseBloc.alumnoIdController.sink.add(event);
       return comentarioDocente(context, comentario, firebaseBloc);
-    }else return comentarioAlumno(context, comentario, firebaseBloc);
+    }else{ 
+      return comentarioAlumno(context, comentario, firebaseBloc);
+      }
   }
  comentarioDocente(BuildContext context, DocumentSnapshot comentario, FirebaseBloc firebaseBloc){
    return Column(
@@ -187,7 +321,9 @@ class _ComentariosPageState extends State<ComentariosPage> {
 
  }
   enviarComentario(FirebaseBloc firebaseBloc){
- 
+    
+   
+
     final DateTime timestamp1= DateTime.now();   
     commentsRef
         .document(widget.tarea['postId'])
@@ -199,7 +335,7 @@ class _ComentariosPageState extends State<ComentariosPage> {
           'avatarUrl': currentUser.photoUrl,
           'userId': currentUser.id,
           'docente': docente,
-          'alumno' : docente?firebaseBloc.alumnoSelectedController.value:'',
+          'alumno' : docente?nombreAlumno:'',
         });
 
     FocusScope.of(context).requestFocus(new FocusNode());    
