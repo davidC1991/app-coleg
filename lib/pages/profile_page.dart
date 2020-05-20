@@ -352,11 +352,15 @@ class _ProfilePageState extends State<ProfilePage> {
                        mainAxisSize: MainAxisSize.max,
                        crossAxisAlignment: CrossAxisAlignment.start,
                        children: <Widget>[
-                         Text(
-                           user.username,
-                           style: TextStyle(
-                             fontWeight: FontWeight.bold,
-                             fontSize: 16.0
+                         Container(
+                           //color:Colors.blue,
+                           width: 80.0,
+                           child: Text(
+                             user.username,
+                             style: TextStyle(
+                               fontWeight: FontWeight.bold,
+                               fontSize: 16.0
+                             ),
                            ),
                          ),
                          SizedBox(width: 24.0,),
