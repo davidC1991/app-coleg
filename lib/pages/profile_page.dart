@@ -6,7 +6,7 @@ import 'package:app_red_social/pages/edit_profile.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:app_red_social/pages/tarea_page.dart';
 import 'package:app_red_social/pages/upLoad_page.dart';
-import 'package:app_red_social/provider/usuario_provider.dart';
+import 'package:app_red_social/Clases_Auxiliares/cargarCalificaciones.dart';
 import 'package:app_red_social/utils/utils.dart';
 //import 'package:app_red_social/widgets/botones_cursos.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -56,7 +56,9 @@ class _ProfilePageState extends State<ProfilePage> {
   String a='-';
   List<String> cursos= List();
   List<Widget> lista= List();
+  Map<DocumentSnapshot,String> tareasConCalificaiones=new Map();
   List<DocumentSnapshot> tareas = new List();
+  List<String> calificaciones = new List();
   bool checkBoxPrimero=false;
   bool checkBoxSegundo=false;
  bool checkBoxTercero=false;
@@ -86,6 +88,7 @@ class _ProfilePageState extends State<ProfilePage> {
    String mensajeRegistroDocente;
    bool isDocente;
   NuevoDocente nuevoDocente = NuevoDocente();
+  //CargarCalificacion cargarCalificacion= CargarCalificacion();
   bool visibilidadC1=true;
 
   bool visibilidadC2=true;
@@ -445,6 +448,9 @@ class _ProfilePageState extends State<ProfilePage> {
         firebaseBloc.cursoSelectedStream.listen((c){cursoSelected=c;});
 
         print('contPantalla: $contPantalla');
+        //cargarCalificacion.cargarCalificacion(firebaseBloc);
+        
+        
        
         return Scaffold(
           appBar: header(context, textoTitulo: 'perfil'),
@@ -1107,8 +1113,9 @@ class _ProfilePageState extends State<ProfilePage> {
       firebaseBloc.cargarTareas();
       return streamBuilderTareasDocente(firebaseBloc, context);
     }else if(contPantalla==4){
+      //cargarCalificacion(firebaseBloc);
       firebaseBloc.cargarTareaAlumno();
-      return streamBuilderTareasDocente(firebaseBloc, context);
+      return streamBuilderTareasAlumnos(firebaseBloc, context);
       //return streamBuilderTareasAlumnos(firebaseBloc, context);
     }
       
@@ -1116,25 +1123,37 @@ class _ProfilePageState extends State<ProfilePage> {
   return Container();
 } 
 
-streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
+streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
   
-   return StreamBuilder<List<DocumentSnapshot>>(
-    stream: firebaseBloc.tareasStream,
+   return StreamBuilder<Map<DocumentSnapshot,String>>(
+    stream: firebaseBloc.tareasAlumnoStream,
     builder: (context, snapshot){
       if(snapshot.data!=null){
        //tareas.clear();
-       tareas =snapshot.data;
+       tareasConCalificaiones =snapshot.data;
+       //print(tareasConCalificaiones.keys.);
+       tareas.clear();
+       calificaciones.clear();
+
+       tareasConCalificaiones.forEach((key, value) { 
+          tareas.add(key);
+          calificaciones.add(value);
+       });
+       
+       //print(tareas);
+       //print(calificaciones);
+       //print(calificaciones);
        if(tareas.isEmpty){
-          return Center(child:Text('El docente no ha publicado tareas aun'));
+         return Center(child:Text('El docente no ha publicado tareas aun'));
           
        }else{
-       print('Nombre docente:----------------->');
-       print(tareas[0].data['nombreDoc']);
+       //print('Nombre docente:----------------->');
+       //print(tareas[0].data['nombreDoc']);
        firebaseBloc.docenteUserNameController.sink.add(tareas[0].data['nombreDoc']);
 
          if(postOrientation=='grid'){
          
-             return _dibujarCuadriculasReportes(context, tareas, firebaseBloc);
+             return _dibujarCuadriculasReportes(context, tareas, firebaseBloc,calificaciones);
           
               
                
@@ -1145,10 +1164,10 @@ streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
             shrinkWrap: true,
             itemCount:tareas.length ,
             itemBuilder: (context, i){
-              return  imagen_list(context, tareas, i, firebaseBloc);
+              return  imagen_list(context, tareas, i, firebaseBloc,calificaciones);
            });
-          } 
-        //return Container();
+          }  
+        return Container();
        }
       }else{
         return   Center(child:CircularProgressIndicator(),);
@@ -1157,7 +1176,7 @@ streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
   ); 
 }
 
-streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
+ streamBuilderTareasDocente(FirebaseBloc firebaseBloc,BuildContext context){
   
    return StreamBuilder<List<DocumentSnapshot>>(
     stream: firebaseBloc.tareasStream,
@@ -1169,14 +1188,14 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
 
         if(postOrientation=='grid'){
          
-             return _dibujarCuadriculasReportes(context, tareas, firebaseBloc);
+             return _dibujarCuadriculasReportes(context, tareas, firebaseBloc,calificaciones);
           }else if (postOrientation=='list'){
             
             return ListView.builder(
             shrinkWrap: true,
             itemCount:tareas.length ,
             itemBuilder: (context, i){
-              return  imagen_list(context, tareas, i, firebaseBloc);
+              return  imagen_list(context, tareas, i, firebaseBloc,calificaciones);
            });
           }
         //return Container();
@@ -1186,7 +1205,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
       }
     },
   ); 
-}
+} 
   
   Widget  pantallaCursos(FirebaseBloc firebaseBloc,BuildContext context){
 
@@ -1198,7 +1217,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
     builder: (context, snapshot){
       if(snapshot.hasData){
         cursos=snapshot.data;
-        print(snapshot.data);
+       // print(snapshot.data);
         //return Container();
         return botones(cursos,context,firebaseBloc);
       }else{
@@ -1215,7 +1234,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
       firebaseBloc.cargarMaterias();
       return streamBuilderDocentesMaterias(firebaseBloc, context);
     }else if(contPantalla==3){
-      print('----');
+     // print('----');
       firebaseBloc.cargarMateriasAlumons();
       return streamBuilderAlumnosMaterias(firebaseBloc, context);
     }
@@ -1332,10 +1351,10 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
   }
 
                                 
-  Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc){
+  Widget _tablaDeMaterias(BuildContext context, final ds, int i, FirebaseBloc firebaseBloc,List<String>calificaciones){
    return Column(
     children: <Widget>[
-     _dibujarCuadriculasReportes(context, ds, firebaseBloc),
+     _dibujarCuadriculasReportes(context, ds, firebaseBloc,calificaciones),
    ],
   );
 }                      
@@ -1350,7 +1369,7 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
    );
  }                       
                     
-  _dibujarCuadriculasReportes(BuildContext context, List<DocumentSnapshot> tareas, FirebaseBloc firebaseBloc){
+  _dibujarCuadriculasReportes(BuildContext context, List<DocumentSnapshot> tareas, FirebaseBloc firebaseBloc,List<String>calificaciones){
 
   
   return GridView.builder(
@@ -1358,16 +1377,16 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
       shrinkWrap: true,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 1.0,
+        crossAxisSpacing: 2.0,
         mainAxisSpacing: 1.0,
         childAspectRatio: 1.0,
       ),
       itemBuilder: (BuildContext context, int i){
-         return imagen(context, tareas, i, firebaseBloc);
+         return imagen(context, tareas, i, firebaseBloc, calificaciones);
           },);
        }
 
-  Widget imagen_list(BuildContext context, List<DocumentSnapshot> tareas, int i, FirebaseBloc firebaseBloc){
+  Widget imagen_list(BuildContext context, List<DocumentSnapshot> tareas, int i, FirebaseBloc firebaseBloc,List<String>calificaciones){
    
    return Container(
     height: 300.0,
@@ -1407,11 +1426,9 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
        
             
 
-  Widget imagen(BuildContext context, List<DocumentSnapshot> tareas, int i, FirebaseBloc firebaseBloc){
+  Widget imagen(BuildContext context, List<DocumentSnapshot> tareas, int i, FirebaseBloc firebaseBloc,List<String>calificaciones){
    
-      return Padding(
-        padding: const EdgeInsets.all(1.0),
-        child: GestureDetector(
+      return  GestureDetector(
           onTap: (){
           //firebaseBloc.listaTareaElegidaController.sink.add(true);
           idTarea=tareas[i].data['postId'];
@@ -1421,29 +1438,86 @@ streamBuilderTareasAlumnos(FirebaseBloc firebaseBloc,BuildContext context){
           MaterialPageRoute(builder: (context) => TareaPage(tareas: tareas, tarea: tareas[i],vistaTareaElegida:vistaTareaElegida,docenteb:widget.docenteb)));
           },
           //Navigator.pushNamed(context, 'tareaPage', tarea: tareas[i]),
-          child: Card(
-                  margin: EdgeInsets.symmetric(horizontal: 2.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                  ),
-              //    child: Image.network(product.documents[i].data['mediaUrl'])
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: FadeInImage(
-                    image: NetworkImage(tareas[i].data['mediaUrl']),
-                    placeholder: AssetImage('assets/cargando.gif'),
-                    height: 70.0,
-                    width: 100.0,
-                    fit: BoxFit.cover, 
-            ),
-           ),
+          child: Stack(
+            children: <Widget>[
+               /* Card(
+                    margin: EdgeInsets.symmetric(horizontal: 1.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(0.0),
+                    ),
+                //    child: Image.network(product.documents[i].data['mediaUrl'])
+                    child: */
+                     ClipRRect(
+                      borderRadius: BorderRadius.circular(1),
+                      child: FadeInImage(
+                      image: NetworkImage(tareas[i].data['mediaUrl']),
+                      placeholder: AssetImage('assets/cargando.gif'),
+                      height: 170.0,
+                      width: 200.0,
+                      fit: BoxFit.cover, 
+              ),
+             ),
+            //),
+             Positioned(
+               top: 3,
+               right:3,
+               width: 23,
+               height: 20,
+               child: ClipRRect(
+                 borderRadius: BorderRadius.circular(5),
+                 child: Container(
+                   alignment: Alignment.center,
+                  //padding: EdgeInsets.all(50),
+                  //height: 10,
+                  //width: 10,
+                  //color: Colors.blue.withOpacity(0.8),
+                  color: Colors.green[300],
+                  child:widget.docenteb?(tareas[i].data['calificacion']?Icon(Icons.check_circle_outline,color: Colors.white, size: 17,):Icon(Icons.error_outline,color: Colors.white, size: 17,))
+                        :(tareas[i].data['calificacion']?Text(calificaciones[i],style:TextStyle(color: Colors.white)):Icon(Icons.error_outline,color: Colors.white, size: 17,)) 
+                ),
+               ),
+             ),
+              Positioned(
+               top: 26,
+               right:3,
+               width: 23,
+               height: 20,
+               child: ClipRRect(
+                 borderRadius: BorderRadius.circular(5),
+                 child: Container(
+                   alignment: Alignment.center,
+                  //padding: EdgeInsets.all(50),
+                  //height: 10,
+                  //width: 10,
+                  //color: Colors.blue.withOpacity(0.8),
+                  color: Colors.green[300],
+                  child: Text('A',style:TextStyle(color: Colors.white)) 
+                ),
+               ),
+             )  
+            ]
           ),
-        ),
+        
       );
     }
               
-            
+        
+ cargarCalificacion(FirebaseBloc firebaseBloc){
+  // firebaseBloc.cargarCalificaciones();
+    print('pppppppppppppp');
+    
+     /*  firebaseBloc.calificacionesStream.listen((b){
+        //print('lll');
 
+        calificaciones=b;
+        print(calificaciones);
+        b.clear();
+     });
+      */
+   
+      
+
+  }   
 
 }
 

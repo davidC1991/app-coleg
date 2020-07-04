@@ -180,10 +180,10 @@ class UpLoadPage extends StatefulWidget {
         'tituloTema'  : tituloTema,
         'mediaUrl'    : mediaUrl,
         'descripcion' : description,
-        'calificacion': '5.0',
+        'calificacion': false,
         'revisado'    : true,
         'fechaLimite' : fecha,
-        'timestamp'   : timestamp,
+        'timestamp'   : DateTime.now(),
         'likes'       : {},
         
          
@@ -391,10 +391,10 @@ Widget botonTextoTarea(String text){
      final firebaseBloc  = Provider.firebaseBloc(context); 
     
     firebaseBloc.materiaSelectedStream.listen((b){
-        print('====================================');
+        //print('====================================');
         //setState(() {
         materiaSelected=b;
-        print ('materia seleccionada---------------->: $materiaSelected');  
+       // print ('materia seleccionada---------------->: $materiaSelected');  
         //});
          });
         
@@ -402,7 +402,7 @@ Widget botonTextoTarea(String text){
         
         //setState(() {
         cursoSelected=c;
-        print ('curso seleccionado--------------------->: $cursoSelected');  
+        //print ('curso seleccionado--------------------->: $cursoSelected');  
         //});
          });
     //super.build(context);

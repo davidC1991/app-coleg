@@ -228,8 +228,8 @@ getFollowing() async{
       
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String curso= prefs.getString('keyCurso');
-      print('materia seleccionada:$materiaSelected');
-      print('curso seleccionado:$curso');
+      //print('materia seleccionada:$materiaSelected');
+      //print('curso seleccionado:$curso');
       List<Map> mapaCursos= new List<Map>();
       Map<String, Object> materiasYcursos= new Map();
       String docenteIdSelected;
@@ -241,38 +241,39 @@ getFollowing() async{
 
       for (var i = 0; i < snapshot.documents.length; i++) {
         materiasYcursos=snapshot.documents[i].data['curso'];
-         print('....');
+        // print('....');
         //print(materiasYcursos);
        // print(materiasYcursos[0]);
         
        if(materiasYcursos.containsKey(curso)){
         
-          print('este es un profesor del curso de $curso');
+          //print('este es un profesor del curso de $curso');
          if(materiasYcursos[curso].toString().contains(materiaSelected)){
-          print('este es un profesor da $materiaSelected en el curso de $curso');
+          //print('este es un profesor da $materiaSelected en el curso de $curso');
           docenteIdSelected=snapshot.documents[i].data['id'];
         }  
           
       } 
       }
-      print(docenteIdSelected);
+      //print(docenteIdSelected);
       if(docenteIdSelected!=null){
-      print('----------------------------');
+      //print('----------------------------');
        DocumentSnapshot docenteIdPost = await postsRef
         .document(docenteIdSelected)
+        
         .get();
-        print(docenteIdPost.documentID);
+       // print(docenteIdPost.documentID);
         if(docenteIdPost.documentID==docenteIdSelected){
-          print('El docente si tiene tareas subidas');
+          //print('El docente si tiene tareas subidas');
           List<DocumentSnapshot> tareasElegidas= new List<DocumentSnapshot>();
           QuerySnapshot snapshot1 = await postsRef
           .document(docenteIdSelected)
           .collection('userPosts')
-        //.orderBy('timestamp', descending: true)
+          .orderBy('timestamp', descending: true)
           .getDocuments();
-          print('==================');
-          print(snapshot1.documents[0].data['materia']);
-          print(snapshot1.documents[0].data['curso']);
+         // print('==================');
+         // print(snapshot1.documents[0].data['materia']);
+         // print(snapshot1.documents[0].data['curso']);
         //print('=========|=========');
         //print(snapshot.documents[0].data.containsKey('curso'));
         //print('=================='); 
@@ -286,8 +287,70 @@ getFollowing() async{
         /* if (snapshot1.documents.isEmpty){
           return [];
         } */ 
-        print(tareasElegidas);
-        return tareasElegidas;
+        
+
+         String nombre;
+         SharedPreferences prefs = await SharedPreferences.getInstance();
+         nombre= prefs.getString('keyUserName');
+         //print(nombre);
+         Map<DocumentSnapshot,String> tareasConCalificacion= Map();
+         QuerySnapshot snapshot12 = await calificacionesRef
+         .document(nombre)
+         .collection('materias')
+         .getDocuments();
+          
+          print(tareasElegidas.length);
+          print(snapshot12.documents.length);
+          
+         for (var i = 0; i < tareasElegidas.length; i++) {
+           for (var n = 0; n < snapshot12.documents.length; n++) {
+              if(tareasElegidas[i].documentID.toString()==snapshot12.documents[n].documentID.toString()){
+              
+               tareasConCalificacion[tareasElegidas[i]]=snapshot12.documents[n].data['calificacion'];
+             } 
+           }
+         }
+          tareasConCalificacion.forEach((key, value) { 
+            print(key.documentID);
+          });
+        //  print(tareasConCalificacion[tareasElegidas[0]]);
+         // print(tareasElegidas);
+          print('--');
+              
+        bool aux=false;
+         if(tareasConCalificacion.length!=tareasElegidas.length){
+           for (var y = 0; y < tareasElegidas.length; y++) {
+            print(y);
+             
+           tareasConCalificacion.keys.forEach((key) { 
+            print('--${tareasElegidas[y].documentID}--${key.documentID}');
+            if(tareasElegidas[y].documentID==key.documentID){
+             //tareasConCalificacion[tareasElegidas[y]]='';
+             aux=true;
+            
+             //print('igual');
+            }
+            print(aux); 
+            });
+             if(!aux){
+              tareasConCalificacion[tareasElegidas[y]]='';
+            }else{aux=false;} 
+           }
+            
+            
+
+            
+           
+              
+               
+          
+             
+           
+            
+         }
+          
+          print(tareasConCalificacion);
+          return tareasConCalificacion;
         }else{
           print('El docente no ha subido tareas');
           //return [];
@@ -308,7 +371,24 @@ getFollowing() async{
 
 
         } 
+   getCalificaciones()async{
+     String nombre;
+     SharedPreferences prefs = await SharedPreferences.getInstance();
+     nombre= prefs.getString('keyUserName');
+     SharedPreferences prefs1 = await SharedPreferences.getInstance();
+     usuarioId= prefs1.getString('keyUsuarioId');
+     //print(nombre);
+  
+     QuerySnapshot snapshot1 = await calificacionesRef
+     .document(nombre)
+     .collection('materias')
+     .getDocuments();
      
+    // print('-------------------2------------'); 
+    // print(snapshot1.documents);
+
+     return snapshot1.documents;
+   }  
  
         
 }

@@ -180,6 +180,15 @@ class _ComentariosPageState extends State<ComentariosPage> {
           'fechaLimite': widget.tarea['fechaLimite'],
           'idTarea': widget.tarea['postId']
         });
+
+      postsRef
+    .document(usuarioId)
+    .collection('userPosts')
+    .document(widget.tarea['postId'])
+    .updateData({
+      'calificacion':true,
+    });
+
       calificacion='';
     }  
        

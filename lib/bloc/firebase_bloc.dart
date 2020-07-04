@@ -6,7 +6,7 @@ export 'package:app_red_social/provider/peticiones_firebase.dart';
 class FirebaseBloc{
  
   final _tareasController = new BehaviorSubject<List<DocumentSnapshot>>();
-  final _tareasAlumnoController = new BehaviorSubject<List<String>>();
+  final _tareasAlumnoController = new BehaviorSubject<Map<DocumentSnapshot,String>>();
   final _comentariosController = new BehaviorSubject<List<DocumentSnapshot>>();
   final _materiasController = new BehaviorSubject<Map<String,Object>>();
   final _cursosController = new BehaviorSubject();
@@ -22,6 +22,7 @@ class FirebaseBloc{
    final alumnoSelectedController   = new BehaviorSubject<String>();
    final docenteUserNameController   = new BehaviorSubject<String>();
    final alumnoIdController   = new BehaviorSubject<String>();
+   final _calificacionesController = new BehaviorSubject<List<DocumentSnapshot>>();
    
 
 
@@ -34,13 +35,13 @@ class FirebaseBloc{
  
   Stream<bool> get boxStream => boxController;
   Stream<String> get alumnoSelectedStream => alumnoSelectedController;
-   Stream<String> get alumnoIdStream => alumnoIdController;
-   Stream<String> get docenteUserNameStream => docenteUserNameController;
+  Stream<String> get alumnoIdStream => alumnoIdController;
+  Stream<String> get docenteUserNameStream => docenteUserNameController;
   Stream<String> get actorSelectedStream => actorSelectedController;
-   Stream<List<DocumentSnapshot>> get comentariosStream => _comentariosController;
+  Stream<List<DocumentSnapshot>> get comentariosStream => _comentariosController;
   Stream<List<DocumentSnapshot>> get alumnosPropiosStream => _alumnosPropiosController;
   Stream<List<DocumentSnapshot>> get tareasStream => _tareasController;
-  Stream<List<String>> get tareasAlumnoStream => _tareasAlumnoController;
+  Stream<Map<DocumentSnapshot,String>> get tareasAlumnoStream => _tareasAlumnoController;
   Stream <Map<String,Object>>get materiasStream => _materiasController;
   Stream get cursosStream => _cursosController;
   Stream<bool> get cargandoStream => _cargandoController;
@@ -49,13 +50,25 @@ class FirebaseBloc{
   Stream<String> get materiaSelectedStream => materiaSelectedController;
   Stream<String> get cursoSelectedStream => cursoSelectedController;
   Stream<List<String>> get materiasAlumnosStream => _materiasAlumonsController;
+  Stream<List<DocumentSnapshot>> get calificacionesStream => _calificacionesController;
+  
+
+
+cargarCalificaciones()async{
+  final calificaciones= await _datosProvider.getCalificaciones();
+  //
+  //print(calificaciones);
+  _calificacionesController.sink.add(calificaciones);
+  print('!!!!!!!!');
+}
+
 
 cargarAlumnosPropios()async{
   List<DocumentSnapshot> listaEstudiantes= new List();
   final alumnos= await _datosProvider.getAlumnosPropios();
-  print('elegir alumnos del curso asignado al docente');
+  //print('elegir alumnos del curso asignado al docente');
   //print(alumnos[0].data['curso']);
-  print(cursoSelectedController.value);
+ // print(cursoSelectedController.value);
   
   for (var i = 0; i < alumnos.length; i++) {
     if(alumnos[i].data['curso']==cursoSelectedController.value){
@@ -71,7 +84,7 @@ cargarTareaAlumno()async{
    _cargandoController.sink.add(true);
   final tareaAlumno= await _datosProvider.getTareasAlumnos();
      //print(tareaAlumno);
-     _tareasController.sink.add(tareaAlumno);
+     _tareasAlumnoController.sink.add(tareaAlumno);
      _cargandoController.sink.add(false);
 }
 
@@ -83,9 +96,11 @@ cargarComentarios()async {
  
   
    List<DocumentSnapshot> listaComentarios= new List();
-    alumnoSelectedStream.listen((b){
+  
+   alumnoSelectedStream.listen((b){     
         alumno_1=b;
-     });
+         
+      });
       
     docenteUserNameStream.listen((c) {
       docente_1=c;
@@ -144,10 +159,10 @@ cargarTareas()async {
       _cargandoController.sink.add(true);
       final tareas= await _datosProvider.getTareas();
       todasTareas.clear();
-      print('tareas--|--$tareas');
-      print(materiaSelected);
+      //print('tareas--|--$tareas');
+      //print(materiaSelected);
       
-      print(tareas.documents.length);
+      //print(tareas.documents.length);
       //print(tareas.documents[1].data.containsValue(materiaSelected));
       for (var i = 0; i < tareas.documents.length; i++) {
           if (tareas.documents[i].data.containsValue(cursoSelected)&&tareas.documents[i].data.containsValue(materiaSelected)){
@@ -159,7 +174,7 @@ cargarTareas()async {
          // print(todasTareas[i].documentID);  
         }
      //-----------------------------------------------------------------------------------------------
-     print(todasTareas);
+     //print(todasTareas);
      _tareasController.sink.add(todasTareas);
      _cargandoController.sink.add(false);
   }
@@ -200,6 +215,7 @@ cargarTareas()async {
     alumnoSelectedController?.close();
     docenteUserNameController?.close();
     alumnoIdController?.close();
+    _calificacionesController?.close();
     //_articulosCarritoController?.close();
   }
 

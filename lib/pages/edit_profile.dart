@@ -118,8 +118,9 @@ class _EditProfileState extends State<EditProfile> {
     }
 
   logout() async {
-    await googleSignIn.signOut();
-    Navigator.push(context, MaterialPageRoute(builder: (context)=> HomePage()));
+    //await googleSignIn.signOut();
+    //Navigator.push(context, MaterialPageRoute(builder: (context)=> HomePage()));
+    Navigator.of(context).pushNamedAndRemoveUntil('home1', (Route<dynamic> route) => false);
   }
 
     @override
@@ -129,7 +130,7 @@ class _EditProfileState extends State<EditProfile> {
           appBar: AppBar(
             backgroundColor: Colors.white,
             title: Text(
-              'Editar Perfil',
+              'Edit Perfil',
               style: TextStyle(
                 color: Colors.black,
               ),
