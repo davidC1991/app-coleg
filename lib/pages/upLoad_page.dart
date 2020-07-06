@@ -148,6 +148,7 @@ class UpLoadPage extends StatefulWidget {
 
   compressImage()async{
     final tempDir = await getTemporaryDirectory();
+    print('file--------------3---------------->$file');
     final path = tempDir.path;
     Im.Image imageFile = Im.decodeImage(file.readAsBytesSync());
     final compressedImageFile= File('$path/img_$postId.jpg')..writeAsBytesSync(Im.encodeJpg(imageFile,quality: 85));

@@ -1,5 +1,6 @@
 import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/comentarios_page.dart';
+import 'package:app_red_social/pages/comentarios_page_2.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:expansion_tile_card/expansion_tile_card.dart';
@@ -236,6 +237,7 @@ Column tareaUnica(BuildContext context, DocumentSnapshot tarea, FirebaseBloc fir
                 IconButton(
                   icon: Icon(Icons.message, color: Colors.teal),
                   onPressed: (){
+                    //Navigator.push(context, MaterialPageRoute(builder: (context) => ComentariosPage2()));
                     Navigator.push(context, MaterialPageRoute(builder: (context) => ComentariosPage(tarea:tarea)));
                    }
                   ),

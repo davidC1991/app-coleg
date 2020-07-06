@@ -1,14 +1,24 @@
+
+
+import 'dart:io';
+import 'package:flutter/material.dart';
+
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as Im;
+import 'package:uuid/uuid.dart'; 
 import 'package:app_red_social/bloc/provider.dart';
 import 'package:app_red_social/pages/home_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:app_red_social/widgets/header.dart';
-import 'package:app_red_social/pages/profile_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timeago/timeago.dart' as timeago;
+import 'package:firebase_storage/firebase_storage.dart';
 
- 
+
+
+
+
 class ComentariosPage extends StatefulWidget {
   DocumentSnapshot tarea;
 
@@ -19,7 +29,11 @@ class ComentariosPage extends StatefulWidget {
 }
 
 class _ComentariosPageState extends State<ComentariosPage> {
+  File file1;
+  String mediaUrl="";
   
+  bool isUploading= false;
+  String fotoId= Uuid().v4();
   TextEditingController commentController = TextEditingController();
   TextEditingController calificacionController = TextEditingController();
   ScrollController _scrollController = new ScrollController();
@@ -42,6 +56,99 @@ class _ComentariosPageState extends State<ComentariosPage> {
      usuarioId= prefs1.getString('keyUsuarioId');
      materia=widget.tarea['materia'];
   }
+
+handleTakePhoto() async {
+    Navigator.pop(context);
+      File file = await ImagePicker.pickImage(
+      source: ImageSource.camera,
+      maxHeight: 675,
+      maxWidth: 960,
+    );
+    setState((){
+      this.file1 = file;
+    });
+        
+  }  
+
+  handleChooseFromGallery()async{
+    Navigator.pop(context);
+    File file = await ImagePicker.pickImage(source: ImageSource.gallery);
+    
+     setState((){
+      this.file1 = file;
+    });
+    
+      
+  }
+ 
+   selectImage(parentContext){
+    return showDialog(
+      context: parentContext,
+      builder: (context){
+        return SimpleDialog(
+          title: Text('Escoger Imagen'),
+          children: <Widget>[
+            SimpleDialogOption(
+               child: Text('Foto de Camara'),
+               onPressed: handleTakePhoto,
+            ),
+            SimpleDialogOption(
+               child: Text('Imagen de Galeria'),
+               onPressed: handleChooseFromGallery,
+            ),
+            SimpleDialogOption(
+               child: Text('Cancelar'),
+               onPressed: ()=> Navigator.pop(context),
+            ),
+          ],
+        );
+      }
+
+    );
+  }
+
+  clearImage(){
+    setState(() {
+      file1= null;
+    });
+  }
+
+compressImage()async{
+       
+    
+   // 
+    final tempDir=   await getTemporaryDirectory();
+    final path = tempDir.path;
+    Im.Image imageFile = Im.decodeImage(file1.readAsBytesSync());
+    final compressedImageFile= File('$path/img_$fotoId.jpg')..writeAsBytesSync(Im.encodeJpg(imageFile,quality: 85));
+    setState(() {
+      file1=compressedImageFile;
+    });
+    
+  }
+
+
+ handleSubmit() async{
+    await compressImage();
+    mediaUrl = await uploadImage(file1);
+    if (mediaUrl.isNotEmpty){
+      setState(() { 
+      isUploading=false;
+      });
+    }
+    
+    
+    }
+
+   Future<String> uploadImage(imageFile) async{
+
+         StorageUploadTask uploadTask = storageRef.child('foto_$fotoId.jpg').putFile(imageFile);
+         StorageTaskSnapshot storageSnap = await uploadTask.onComplete;
+         String downloadUrl = await storageSnap.ref.getDownloadURL();
+         return downloadUrl;
+ }
+
+
   @override
   Widget build(BuildContext context) {
     final firebaseBloc  = Provider.firebaseBloc(context);  
@@ -82,19 +189,58 @@ class _ComentariosPageState extends State<ComentariosPage> {
         
         ),
         body: Column(
+
           children: <Widget>[
             Expanded(child:comentarios(firebaseBloc)),
              ListTile(
-              title: TextFormField(
-                controller: commentController,
-                decoration: InputDecoration(labelText: 'Escribe tu Respuesta...'),
+              title: file1 == null ? TextFormField(
+                     controller: commentController,
+                     decoration: InputDecoration(labelText: 'Escribe tu Respuesta...'),
+                     ): AspectRatio(
+                aspectRatio:0.7,
+                child: Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      fit: BoxFit.cover,
+                      image: FileImage(file1),
+                    )
+                  )
+                ), 
               ),
-              trailing: OutlineButton(
-                onPressed:(){enviarComentario(firebaseBloc);}, 
-                //addComment,
-                borderSide: BorderSide.none,
-                child: Text('Enviar'),
-              ),
+               
+            
+              trailing:
+                 Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      
+                      IconButton(
+                        onPressed:(){
+                          isUploading= true;
+                         
+                          selectImage(context);}, 
+                        //addComment,
+                        icon: Icon(Icons.add_photo_alternate),
+                        iconSize: 32.0,
+                      ),
+                      IconButton(
+                        onPressed:() async {
+                          if(isUploading){
+                              await handleSubmit();
+                            }
+                            enviarComentario(firebaseBloc);
+                            
+                          }, 
+                        //addComment,
+                        icon: Icon(Icons.send),
+                        iconSize: 32.0,
+                      ),
+                    ],
+                ),
+               
+              
             ),
             
           ],
@@ -102,7 +248,7 @@ class _ComentariosPageState extends State<ComentariosPage> {
     ),
      );
   }
-
+    
   calificarEstudiante(BuildContext context)async{
     return showDialog(
       context:context,
@@ -192,19 +338,7 @@ class _ComentariosPageState extends State<ComentariosPage> {
       calificacion='';
     }  
        
-        
-        
- 
-
-       
- 
-        
-
-       
-      
-    
   comentarios(FirebaseBloc firebaseBloc){
-    
     return StreamBuilder<List<DocumentSnapshot>>(
       stream: firebaseBloc.comentariosStream,
       builder: (context, snapshot){
@@ -267,7 +401,17 @@ class _ComentariosPageState extends State<ComentariosPage> {
                   children: <Widget>[
                     Text(comentario['username'], style: TextStyle(fontSize:15.0, fontWeight: FontWeight.bold)),
                     SizedBox(height:5.0),
-                    Text(comentario['comment']),
+                    comentario['comment']==""? ClipRRect(
+                      borderRadius: BorderRadius.circular(1),
+                      child: FadeInImage(
+                      image: NetworkImage(comentario['foto']),
+                      placeholder: AssetImage('assets/cargando.gif'),
+                      height: 170.0,
+                      width: 200.0,
+                      fit: BoxFit.cover, 
+                      ),
+                    )
+                    :Text(comentario['comment']),
 
                   ],
                 ),
@@ -330,7 +474,7 @@ class _ComentariosPageState extends State<ComentariosPage> {
 
  }
   enviarComentario(FirebaseBloc firebaseBloc){
-    
+    print("mediaUrl::::::::::::::::::::::::::$mediaUrl");
    
 
     final DateTime timestamp1= DateTime.now();   
@@ -345,6 +489,7 @@ class _ComentariosPageState extends State<ComentariosPage> {
           'userId': currentUser.id,
           'docente': docente,
           'alumno' : docente?nombreAlumno:'',
+          'foto'   : mediaUrl 
         });
 
     FocusScope.of(context).requestFocus(new FocusNode());    
@@ -354,6 +499,11 @@ class _ComentariosPageState extends State<ComentariosPage> {
             curve: Curves.easeOut,
             duration: const Duration(milliseconds: 300),
           );
+    mediaUrl="";
+    file1=null;
+    isUploading=false;
+    fotoId= Uuid().v4();
+      
     setState(() {
       
     });
