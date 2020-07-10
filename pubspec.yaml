@@ -41,6 +41,7 @@ dependencies:
   rxdart: ^0.23.1
   expansion_tile_card: ^1.0.3
   dash_chat: ^1.1.11
+  photo_view: ^0.9.2
   
   
   

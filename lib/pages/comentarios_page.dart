@@ -1,6 +1,7 @@
 
 
 import 'dart:io';
+import 'package:app_red_social/pages/imagen_tarea.dart';
 import 'package:flutter/material.dart';
 
 import 'package:path_provider/path_provider.dart';
@@ -14,6 +15,8 @@ import 'package:app_red_social/pages/home_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+
+
 
 
 
@@ -403,12 +406,22 @@ compressImage()async{
                     SizedBox(height:5.0),
                     comentario['comment']==""? ClipRRect(
                       borderRadius: BorderRadius.circular(1),
-                      child: FadeInImage(
-                      image: NetworkImage(comentario['foto']),
-                      placeholder: AssetImage('assets/cargando.gif'),
-                      height: 170.0,
-                      width: 200.0,
-                      fit: BoxFit.cover, 
+                      child: GestureDetector(
+                       
+                        onTap: (){
+                           Navigator.push(
+                           context,
+                           MaterialPageRoute(builder: (context) => ImagenTarea(foto: comentario['foto'])));
+                        },
+                           
+
+                        child: FadeInImage(
+                        image: NetworkImage(comentario['foto']),
+                        placeholder: AssetImage('assets/cargando.gif'),
+                        height: 170.0,
+                        width: 200.0,
+                        fit: BoxFit.cover, 
+                        ),
                       ),
                     )
                     :Text(comentario['comment']),
@@ -499,6 +512,7 @@ compressImage()async{
             curve: Curves.easeOut,
             duration: const Duration(milliseconds: 300),
           );
+          
     mediaUrl="";
     file1=null;
     isUploading=false;
